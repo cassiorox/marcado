@@ -1,0 +1,193 @@
+/* Temas de leitura do Marcado. As cores precisam bater com Theme.swift (editor). */
+
+:root {
+  --reader-font: ui-serif, "New York", Georgia, serif;
+  --reader-size: 19px;
+  --reader-width: 720px;
+  --reader-lh: 1.65;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+:root[data-theme="claro"] {
+  --bg: #ffffff; --text: #1d232b; --muted: #6b7480; --heading: #0f1720;
+  --link: #003ec7; --code-text: #b4235a; --code-bg: #f3f5f8; --quote: #4a5563;
+  --accent: #003ec7; --border: #e3e7ec; --mark: #ffe170;
+}
+:root[data-theme="sepia"] {
+  --bg: #f6efdc; --text: #3b3024; --muted: #8a7a62; --heading: #2a2118;
+  --link: #8a4b12; --code-text: #8f3b1b; --code-bg: #ece2c8; --quote: #6a5a44;
+  --accent: #9a5b1c; --border: #ddd0b0; --mark: #f2d27a;
+}
+:root[data-theme="escuro"] {
+  --bg: #1e2024; --text: #d9dde3; --muted: #8b929c; --heading: #f1f3f6;
+  --link: #7aa7ff; --code-text: #f29bb8; --code-bg: #2a2d33; --quote: #a8afb9;
+  --accent: #7aa7ff; --border: #363a41; --mark: #6b5a1c;
+}
+:root[data-theme="meianoite"] {
+  --bg: #0d1117; --text: #c9d1d9; --muted: #7d8590; --heading: #e6edf3;
+  --link: #58a6ff; --code-text: #ff9bce; --code-bg: #161b22; --quote: #9aa4ae;
+  --accent: #58a6ff; --border: #262c36; --mark: #5a4a12;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+body {
+  font-family: var(--reader-font);
+  font-size: var(--reader-size);
+  line-height: var(--reader-lh);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  padding: 48px 32px 96px;
+}
+
+.markdown-body {
+  max-width: var(--reader-width);
+  margin: 0 auto;
+  overflow-wrap: break-word;
+}
+
+.markdown-body > :first-child { margin-top: 0 !important; }
+
+.markdown-body p,
+.markdown-body ul,
+.markdown-body ol,
+.markdown-body blockquote,
+.markdown-body pre,
+.markdown-body table,
+.markdown-body figure { margin: 0 0 1.1em; }
+
+.markdown-body h1, .markdown-body h2, .markdown-body h3,
+.markdown-body h4, .markdown-body h5, .markdown-body h6 {
+  color: var(--heading);
+  line-height: 1.25;
+  margin: 1.6em 0 0.6em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.markdown-body h1 { font-size: 2.1em; margin-top: 0.4em; }
+.markdown-body h2 { font-size: 1.6em; padding-bottom: 0.25em; border-bottom: 1px solid var(--border); }
+.markdown-body h3 { font-size: 1.3em; }
+.markdown-body h4 { font-size: 1.1em; }
+.markdown-body h5 { font-size: 1em; }
+.markdown-body h6 { font-size: 0.9em; color: var(--muted); }
+
+.markdown-body a { color: var(--link); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
+.markdown-body a:hover { text-decoration-thickness: 2px; }
+
+.markdown-body strong { font-weight: 700; color: var(--heading); }
+.markdown-body mark { background: var(--mark); color: inherit; padding: 0 0.15em; border-radius: 2px; }
+
+.markdown-body ul, .markdown-body ol { padding-left: 1.5em; }
+.markdown-body li { margin: 0.25em 0; }
+.markdown-body li > ul, .markdown-body li > ol { margin: 0.25em 0 0; }
+.markdown-body li::marker { color: var(--muted); }
+
+.markdown-body li.task-list-item { list-style: none; margin-left: -1.5em; padding-left: 0; }
+.markdown-body li.task-list-item input[type="checkbox"] {
+  width: 0.9em; height: 0.9em; margin: 0 0.5em 0 0; vertical-align: -0.05em;
+  accent-color: var(--accent);
+}
+
+.markdown-body blockquote {
+  margin-left: 0;
+  padding: 0.1em 0 0.1em 1.1em;
+  border-left: 3px solid var(--accent);
+  color: var(--quote);
+  font-style: italic;
+}
+.markdown-body blockquote > :last-child { margin-bottom: 0; }
+
+.markdown-body code {
+  font-family: var(--mono);
+  font-size: 0.84em;
+  background: var(--code-bg);
+  color: var(--code-text);
+  padding: 0.12em 0.35em;
+  border-radius: 4px;
+}
+
+.markdown-body pre {
+  position: relative;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.9em 1.1em;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+.markdown-body pre code {
+  background: none;
+  color: var(--text);
+  padding: 0;
+  font-size: 0.8em;
+  border-radius: 0;
+}
+
+.markdown-body .copy-btn {
+  position: absolute;
+  top: 8px; right: 8px;
+  font: 12px -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 9px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.markdown-body pre:hover .copy-btn { opacity: 1; }
+.markdown-body .copy-btn.done { color: var(--accent); }
+
+.markdown-body hr {
+  border: 0;
+  height: 1px;
+  background: var(--border);
+  margin: 2.2em 0;
+}
+
+.markdown-body img, .markdown-body video { max-width: 100%; height: auto; border-radius: 6px; }
+
+.markdown-body table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.9em;
+  line-height: 1.45;
+}
+.markdown-body th, .markdown-body td {
+  border: 1px solid var(--border);
+  padding: 0.45em 0.8em;
+  text-align: left;
+}
+.markdown-body th { background: var(--code-bg); color: var(--heading); font-weight: 600; }
+
+.empty-state {
+  color: var(--muted);
+  font-style: italic;
+  text-align: center;
+  margin-top: 20vh;
+}
+
+@media print {
+  body { padding: 0; }
+  .markdown-body { max-width: none; }
+  .copy-btn { display: none !important; }
+  .markdown-body pre, .markdown-body blockquote, .markdown-body table, .markdown-body img { break-inside: avoid; }
+  .markdown-body h1, .markdown-body h2, .markdown-body h3 { break-after: avoid; }
+}
+
+/* Exportação PDF (createPDF usa mídia de tela, então a classe faz o papel do @media print). */
+body.pdf { padding: 0; }
+body.pdf .markdown-body { max-width: none; }
+body.pdf .markdown-body pre { white-space: pre-wrap; }
