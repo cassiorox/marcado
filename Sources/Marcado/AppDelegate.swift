@@ -109,6 +109,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         Settings.typewriter.toggle()
     }
 
+    @objc func toggleWrapCode(_ sender: Any?) {
+        Settings.wrapCode.toggle()
+    }
+
     @objc func makeDefaultForMarkdown(_ sender: Any?) {
         guard let type = UTType("net.daringfireball.markdown") else { return }
         NSWorkspace.shared.setDefaultApplication(at: Bundle.main.bundleURL, toOpen: type) { error in
@@ -185,6 +189,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         case #selector(setReaderWidth(_:)): item.state = ReaderWidth.allCases[item.tag] == Settings.readerWidth ? .on : .off
         case #selector(setLineSpacing(_:)): item.state = LineSpacing.allCases[item.tag] == Settings.lineSpacing ? .on : .off
         case #selector(toggleTypewriter(_:)): item.state = Settings.typewriter ? .on : .off
+        case #selector(toggleWrapCode(_:)): item.state = Settings.wrapCode ? .on : .off
         default: break
         }
         return true
@@ -379,6 +384,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         view.addItem(.separator())
         view.addItem(AppDelegate.item("Modo foco", #selector(DocumentWindowController.toggleFocusMode(_:)), "f", [.command, .shift]))
         view.addItem(AppDelegate.item("Máquina de escrever", #selector(toggleTypewriter(_:)), "t", [.command, .shift]))
+        view.addItem(AppDelegate.item("Quebrar linhas nos blocos de código", #selector(toggleWrapCode(_:)), "l", [.command, .option]))
         view.addItem(AppDelegate.item("Rolagem sincronizada", #selector(DocumentWindowController.toggleSyncScroll(_:)), ""))
         view.addItem(AppDelegate.item("Barra de status", #selector(DocumentWindowController.toggleStatusBar(_:)), "/"))
         view.addItem(AppDelegate.item("Barra lateral", #selector(DocumentWindowController.toggleDocumentSidebar(_:)), "s", [.command, .control]))

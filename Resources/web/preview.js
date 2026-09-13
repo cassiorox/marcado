@@ -33,6 +33,36 @@
     }
   });
 
+  // Blocos de código: cada linha vira um <span class="ln"> com a indentação em --i (em colunas),
+  // para que a linha quebrada continue alinhada ao próprio recuo em vez de voltar à margem.
+  function splitCodeLines(html) {
+    return html.replace(/(<pre[^>]*><code[^>]*>)([\s\S]*?)(<\/code><\/pre>)/g, function (_, open, body, close) {
+      const lines = body.split("\n");
+      if (lines.length > 1 && lines[lines.length - 1] === "") lines.pop();
+      const out = lines.map(function (l) {
+        const lead = /^[ \t]*/.exec(l)[0];
+        let cols = 0;
+        for (const ch of lead) cols += ch === "\t" ? 4 - (cols % 4) : 1;
+        return '<span class="ln" style="--i:' + cols + '">' + l + "</span>";
+      });
+      return open + out.join("") + close;
+    });
+  }
+  ["fence", "code_block"].forEach(function (rule) {
+    const base = md.renderer.rules[rule];
+    md.renderer.rules[rule] = function () { return splitCodeLines(base.apply(this, arguments)); };
+  });
+
+  // Escolha feita no botão de um bloco (quebrar ou rolar), pela ordem do bloco no documento.
+  // Sobrevive às re-renderizações enquanto se digita.
+  const wrapOverride = new Map();
+
+  function codeText(pre) {
+    const lines = pre.querySelectorAll("code .ln");
+    if (lines.length) return Array.from(lines, function (l) { return l.textContent; }).join("\n");
+    const code = pre.querySelector("code");
+    return code ? code.innerText : pre.innerText;
+  }
 
   const content = document.getElementById("content");
   const root = document.documentElement;
@@ -51,20 +81,51 @@
     base.href = url;
   }
 
+  function isWrapped(pre) {
+    if (pre.classList.contains("wrap")) return true;
+    if (pre.classList.contains("nowrap")) return false;
+    return root.classList.contains("wrap-code");
+  }
+
+  function wrapLabel(pre) { return isWrapped(pre) ? "Rolar para o lado" : "Quebrar linhas"; }
+
+  function refreshWrapButtons() {
+    content.querySelectorAll("pre .wrap-btn").forEach(function (b) { b.textContent = wrapLabel(b.closest("pre")); });
+  }
+
   function addCopyButtons() {
-    content.querySelectorAll("pre").forEach(function (pre) {
+    content.querySelectorAll("pre").forEach(function (pre, idx) {
+      if (wrapOverride.has(idx)) pre.classList.add(wrapOverride.get(idx) ? "wrap" : "nowrap");
+      const bar = document.createElement("div");
+      bar.className = "code-tools";
+
+      const wrap = document.createElement("button");
+      wrap.className = "wrap-btn";
+      wrap.textContent = wrapLabel(pre);
+      wrap.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        const next = !isWrapped(pre);
+        pre.classList.remove("wrap", "nowrap");
+        pre.classList.add(next ? "wrap" : "nowrap");
+        wrapOverride.set(idx, next);
+        wrap.textContent = wrapLabel(pre);
+        collectBlocks();
+      });
+
       const btn = document.createElement("button");
       btn.className = "copy-btn";
       btn.textContent = "Copiar";
       btn.addEventListener("click", function (ev) {
         ev.preventDefault();
-        const code = pre.querySelector("code");
-        post({ type: "copy", text: code ? code.innerText : pre.innerText });
+        post({ type: "copy", text: codeText(pre) });
         btn.textContent = "Copiado";
         btn.classList.add("done");
         setTimeout(function () { btn.textContent = "Copiar"; btn.classList.remove("done"); }, 1400);
       });
-      pre.appendChild(btn);
+
+      bar.appendChild(wrap);
+      bar.appendChild(btn);
+      pre.appendChild(bar);
     });
   }
 
@@ -107,6 +168,12 @@
       root.style.setProperty("--reader-size", s.size + "px");
       root.style.setProperty("--reader-width", s.width + "px");
       root.style.setProperty("--reader-lh", String(s.lh));
+      if (root.classList.contains("wrap-code") !== !!s.wrapCode) {
+        root.classList.toggle("wrap-code", !!s.wrapCode);
+        wrapOverride.clear();
+        content.querySelectorAll("pre").forEach(function (p) { p.classList.remove("wrap", "nowrap"); });
+        refreshWrapButtons();
+      }
       collectBlocks();
     },
 

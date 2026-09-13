@@ -80,7 +80,7 @@ final class Exporter: NSObject, WKNavigationDelegate {
         let style = "--reader-font: \(font); --reader-size: \(size)px; --reader-width: \(width)px; --reader-lh: \(lh);"
         return """
         <!doctype html>
-        <html lang="pt-BR" data-theme="\(theme)" style="\(style)">
+        <html lang="pt-BR" data-theme="\(theme)"\(Settings.wrapCode ? " class=\"wrap-code\"" : "") style="\(style)">
         <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">

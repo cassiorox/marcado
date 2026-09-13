@@ -72,6 +72,12 @@ enum Settings {
         set { d.set(newValue, forKey: "syncScroll"); changed() }
     }
 
+    /// Blocos de código quebram a linha em vez de rolar para o lado (preview e HTML exportado).
+    static var wrapCode: Bool {
+        get { d.object(forKey: "wrapCode") as? Bool ?? true }
+        set { d.set(newValue, forKey: "wrapCode"); changed() }
+    }
+
     static var showSidebar: Bool {
         get { d.object(forKey: "showSidebar") as? Bool ?? true }
         set { d.set(newValue, forKey: "showSidebar"); changed() }
@@ -96,6 +102,7 @@ enum Settings {
             "size": readerSize,
             "width": readerWidth.rawValue,
             "lh": lineSpacing.css,
+            "wrapCode": wrapCode,
         ]
     }
 }

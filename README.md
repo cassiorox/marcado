@@ -103,6 +103,7 @@ Abrir com > Alterar tudo).
 | Bloco de código, tabela, linha horizontal | ⇧⌘K, ⌥⌘T, ⌥⌘- |
 | Exportar HTML, exportar PDF, imprimir | ⇧⌘E, ⌥⇧⌘E, ⌘P |
 | Barra de status | ⌘/ |
+| Quebrar linhas nos blocos de código (liga/desliga) | ⌥⌘L |
 
 As ações de formatação alternam: aplicar de novo remove. Sem seleção, negrito/itálico pegam a
 palavra do cursor e as de linha (título, lista, citação) valem para a linha atual.

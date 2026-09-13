@@ -131,9 +131,33 @@ body {
   border-radius: 0;
 }
 
-.markdown-body .copy-btn {
+/* Uma linha de código por span. Com quebra ligada, a continuação fica 2 colunas além do
+   recuo da própria linha (--i), então o código indentado continua legível. */
+.markdown-body pre .ln { display: block; min-height: 1.5em; }
+html.wrap-code .markdown-body pre:not(.nowrap),
+.markdown-body pre.wrap,
+body.pdf .markdown-body pre {
+  white-space: pre-wrap;
+  overflow-x: visible;
+}
+html.wrap-code .markdown-body pre:not(.nowrap) .ln,
+.markdown-body pre.wrap .ln,
+body.pdf .markdown-body pre .ln {
+  padding-left: calc((var(--i, 0) + 2) * 1ch);
+  text-indent: calc((var(--i, 0) + 2) * -1ch);
+  overflow-wrap: anywhere;
+}
+
+.markdown-body .code-tools {
   position: absolute;
   top: 8px; right: 8px;
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  white-space: normal;
+}
+.markdown-body .code-tools button {
   font: 12px -apple-system, BlinkMacSystemFont, sans-serif;
   color: var(--muted);
   background: var(--bg);
@@ -141,10 +165,9 @@ body {
   border-radius: 6px;
   padding: 3px 9px;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.15s;
 }
-.markdown-body pre:hover .copy-btn { opacity: 1; }
+.markdown-body .code-tools button:hover { color: var(--text); }
+.markdown-body pre:hover .code-tools { opacity: 1; }
 .markdown-body .copy-btn.done { color: var(--accent); }
 
 .markdown-body hr {
@@ -182,7 +205,7 @@ body {
 @media print {
   body { padding: 0; }
   .markdown-body { max-width: none; }
-  .copy-btn { display: none !important; }
+  .code-tools { display: none !important; }
   .markdown-body pre, .markdown-body blockquote, .markdown-body table, .markdown-body img { break-inside: avoid; }
   .markdown-body h1, .markdown-body h2, .markdown-body h3 { break-after: avoid; }
 }
@@ -190,4 +213,3 @@ body {
 /* Exportação PDF (createPDF usa mídia de tela, então a classe faz o papel do @media print). */
 body.pdf { padding: 0; }
 body.pdf .markdown-body { max-width: none; }
-body.pdf .markdown-body pre { white-space: pre-wrap; }
