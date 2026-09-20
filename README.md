@@ -184,6 +184,12 @@ make-icon.swift               gera Resources/AppIcon.icns
   máquina de escrever e na rolagem sincronizada.
 - O scroll view do editor tem `automaticallyAdjustsContentInsets = false`; sem isso ele abria
   rolado 28 pt para baixo.
+- **Largura do editor segue o painel à força.** Com a janela em segundo plano (aba não visível,
+  troca de modo, redimensionamento) o `autoresizingMask` do NSTextView não acompanhava o clip view:
+  o texto ficava com a largura antiga, cortado na borda do painel, e a barra de rolagem aparecia
+  solta no meio da janela (faixa cinza tracejada). `MarkdownTextView.fitWidthToClip()` ajusta a
+  largura e zera o deslocamento horizontal a cada mudança de frame do clip view; a janela também
+  refaz o layout dos split views ao virar chave (`relayoutPanes`).
 - O realce recalcula o documento inteiro quando a edição envolve cercas de código (```` ``` ````)
   ou colagens grandes; do contrário só o parágrafo editado.
 - **Sessão é do app, não do sistema.** A restauração de janelas do macOS fica desligada

@@ -43,7 +43,29 @@ final class MarkdownTextView: NSTextView {
         tv.smartInsertDeleteEnabled = false
         tv.textContainerInset = NSSize(width: 32, height: 28)
         scroll.documentView = tv
+        // A largura do editor precisa seguir o painel mesmo quando o layout muda com a janela
+        // em segundo plano (aba não visível, troca de modo): sem isso o texto fica com a largura
+        // antiga, é cortado na borda e a barra de rolagem aparece solta no meio da janela.
+        scroll.contentView.postsFrameChangedNotifications = true
+        NotificationCenter.default.addObserver(tv, selector: #selector(clipFrameChanged(_:)),
+                                               name: NSView.frameDidChangeNotification, object: scroll.contentView)
         return (scroll, tv)
+    }
+
+    @objc private func clipFrameChanged(_ note: Notification) { fitWidthToClip() }
+
+    /// Ajusta a largura do editor à área visível e zera o deslocamento horizontal.
+    func fitWidthToClip() {
+        guard let clip = enclosingScrollView?.contentView else { return }
+        let w = clip.bounds.width
+        if w > 0, abs(frame.width - w) > 0.5 {
+            setFrameSize(NSSize(width: w, height: frame.height))
+            sizeToFit()
+        }
+        if clip.bounds.origin.x != 0 {
+            clip.setBoundsOrigin(NSPoint(x: 0, y: clip.bounds.origin.y))
+            enclosingScrollView?.reflectScrolledClipView(clip)
+        }
     }
 
     override func setFrameSize(_ newSize: NSSize) {

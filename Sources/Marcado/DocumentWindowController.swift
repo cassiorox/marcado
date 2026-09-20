@@ -184,7 +184,25 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
 
     func windowDidBecomeKey(_ notification: Notification) {
         applySidebarVisibility()
+        relayoutPanes()
         SessionStore.scheduleSave()
+    }
+
+    /// Refaz o layout dos painéis. Necessário ao voltar de uma aba em segundo plano: o split view
+    /// pode ter ficado com frames velhos (painel escondido ainda ocupando espaço, editor largo demais).
+    private func relayoutPanes() {
+        outerSplit.adjustSubviews()
+        splitView.adjustSubviews()
+        if mode == .split {
+            let w = splitView.bounds.width
+            let editorW = editorScroll.frame.width
+            // Só recentraliza se algum painel ficou inválido; respeita a posição arrastada pelo usuário.
+            if editorW < 240 || w - editorW < 240 {
+                splitView.setPosition((w / 2).rounded(), ofDividerAt: 0)
+            }
+        }
+        textView.fitWidthToClip()
+        textView.updateInsets()
     }
 
     func windowWillReturnUndoManager(_ window: NSWindow) -> UndoManager? {
@@ -192,6 +210,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
     }
 
     func windowDidResize(_ notification: Notification) {
+        textView.fitWidthToClip()
         textView.updateInsets()
     }
 
@@ -309,6 +328,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
                 self.splitView.setPosition((self.splitView.bounds.width / 2).rounded(), ofDividerAt: 0)
+                self.textView.fitWidthToClip()
                 self.textView.updateInsets()
             }
         }
@@ -324,6 +344,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
         }
         modeGroup?.selectedIndex = m.rawValue
         if persist { Settings.viewMode = m }
+        textView.fitWidthToClip()
         textView.updateInsets()
     }
 
