@@ -31,7 +31,10 @@ final class WelcomeWindowController: NSWindowController, NSWindowDelegate {
         let wc = instance ?? WelcomeWindowController()
         instance = wc
         wc.sidebar.reload()
-        if wc.window?.isVisible != true { wc.window?.center() }
+        if let w = wc.window {
+            if w.isMiniaturized { w.deminiaturize(nil) }
+            if !w.isVisible { w.center() } else { AppDelegate.ensureOnScreen(w) }
+        }
         wc.showWindow(nil)
         wc.window?.makeKeyAndOrderFront(nil)
         NSApp.activate()

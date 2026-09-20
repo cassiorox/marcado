@@ -188,6 +188,10 @@ make-icon.swift               gera Resources/AppIcon.icns
   ou colagens grandes; do contrário só o parágrafo editado.
 - **Sessão é do app, não do sistema.** A restauração de janelas do macOS fica desligada
   (`NSQuitAlwaysKeepsWindows`) e as janelas não são restauráveis; senão as abas duplicam.
+- **Clique no Dock:** `applicationShouldHandleReopen` devolve `false` (senão o AppKit abre um
+  documento em branco), então é o app quem traz a janela de volta. `makeKeyAndOrderFront` não
+  desminimiza; janela minimizada precisa de `deminiaturize`, e janela que ficou fora de todas as
+  telas (monitor desconectado) é recentralizada. Sem isso o clique no Dock não fazia nada.
 - **Encerrar sem alerta:** `MarcadoDocumentController.reviewUnsavedDocuments` grava a sessão e zera a
   marca de alterado dos rascunhos já gravados em disco antes do AppKit revisar documentos. Se o
   encerramento for cancelado, a marca volta em 3 s.

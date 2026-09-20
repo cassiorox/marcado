@@ -37,11 +37,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     /// O app abre na sessão anterior ou na tela de início, nunca num documento em branco.
     func applicationShouldOpenUntitledFile(_ sender: NSApplication) -> Bool { false }
 
+    /// Clique no ícone do Dock (ou `open -a Marcado`). Devolvemos false para o AppKit não abrir
+    /// um documento em branco, então cabe a nós garantir que alguma janela apareça: janela
+    /// minimizada precisa de deminiaturize (makeKeyAndOrderFront não a traz de volta), janela
+    /// que ficou fora da tela (monitor desconectado) precisa ser recentralizada, e o `flag`
+    /// pode vir true por causa de um painel solto sem nenhuma janela de documento na tela.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        if !flag {
-            if let d = SessionStore.orderedDocuments().first { d.showWindows() } else { WelcomeWindowController.show() }
+        if NSApp.isHidden { NSApp.unhide(nil) }
+        let docs = SessionStore.orderedDocuments()
+        let windows = docs.compactMap { $0.windowControllers.first?.window }
+        if let w = windows.first(where: { $0.isVisible && !$0.isMiniaturized }) {
+            Self.ensureOnScreen(w)
+            if !flag || !windows.contains(where: { $0.isKeyWindow }) { w.makeKeyAndOrderFront(nil) }
+        } else if let w = windows.first(where: { $0.isMiniaturized }) {
+            w.deminiaturize(nil)
+            w.makeKeyAndOrderFront(nil)
+        } else if let d = docs.first {
+            d.showWindows()
+        } else {
+            WelcomeWindowController.show()
         }
+        NSApp.activate()
         return false
+    }
+
+    /// Janela cujo quadro não toca nenhuma tela (ex.: ficou num monitor que foi desconectado)
+    /// volta para o centro da tela principal.
+    static func ensureOnScreen(_ window: NSWindow) {
+        let onScreen = NSScreen.screens.contains { $0.visibleFrame.intersects(window.frame) }
+        if !onScreen { window.center() }
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
