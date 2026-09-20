@@ -33,6 +33,50 @@
     }
   });
 
+  // Link do YouTube sozinho num parágrafo vira cartão com a thumbnail (clicar abre o vídeo).
+  function youtubeID(href) {
+    const m = /^(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})(?:[?&#][^\s]*)?$/.exec(href);
+    return m ? m[1] : null;
+  }
+  function escapeAttr(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  md.core.ruler.push("youtube_cards", function (state) {
+    const toks = state.tokens;
+    for (let i = 1; i < toks.length; i++) {
+      const t = toks[i];
+      if (t.type !== "inline" || toks[i - 1].type !== "paragraph_open") continue;
+      const c = t.children;
+      if (!c || c.length !== 3 || c[0].type !== "link_open" || c[1].type !== "text" || c[2].type !== "link_close") continue;
+      const href = c[0].attrGet("href") || "";
+      const id = youtubeID(href);
+      if (!id) continue;
+      const label = c[1].content.trim();
+      const caption = label && label !== href && label !== href.replace(/^https?:\/\//, "") ? label : "";
+      const card = new state.Token("html_inline", "", 0);
+      card.content =
+        '<a class="yt-card" href="' + escapeAttr(href) + '" title="Abrir no YouTube">' +
+        '<span class="yt-thumb"><img src="https://img.youtube.com/vi/' + id + '/hqdefault.jpg" alt="" loading="lazy">' +
+        '<span class="yt-play" aria-hidden="true"></span></span>' +
+        (caption ? '<span class="yt-caption">' + escapeAttr(caption) + "</span>" : "") +
+        "</a>";
+      t.children = [card];
+      toks[i - 1].attrJoin("class", "yt-block");
+    }
+  });
+
+  // Links para pasta ou arquivo do Mac (caminho absoluto ou file://): ganham ícone; clicar abre
+  // no Finder (pasta) ou no app padrão (arquivo). O lado Swift decide, ao interceptar a navegação.
+  const baseLinkOpen = md.renderer.rules.link_open || function (tokens, idx, options, env, self) { return self.renderToken(tokens, idx, options); };
+  md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+    const href = tokens[idx].attrGet("href") || "";
+    if (/^(file:\/\/|\/|~\/)/.test(href)) {
+      const last = decodeURIComponent(href.replace(/\/+$/, "")).split("/").pop() || "";
+      tokens[idx].attrJoin("class", /\.[A-Za-z0-9]{1,8}$/.test(last) ? "file-link" : "folder-link");
+    }
+    return baseLinkOpen(tokens, idx, options, env, self);
+  };
+
   // Blocos de código: cada linha vira um <span class="ln"> com a indentação em --i (em colunas),
   // para que a linha quebrada continue alinhada ao próprio recuo em vez de voltar à margem.
   function splitCodeLines(html) {

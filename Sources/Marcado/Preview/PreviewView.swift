@@ -109,6 +109,13 @@ final class PreviewView: NSView, WKNavigationDelegate, WKScriptMessageHandler {
                 return
             }
             if url.fragment != nil && url.path == AppResources.previewURL.path { return }
+            var isDir: ObjCBool = false
+            guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir) else {
+                NSSound.beep()
+                NSLog("Marcado: caminho do link não existe: \(url.path)")
+                return
+            }
+            // Pasta abre no Finder (dentro dela); arquivo abre no app padrão. NSWorkspace faz os dois.
         }
         NSWorkspace.shared.open(url)
     }

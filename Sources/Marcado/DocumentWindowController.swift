@@ -62,6 +62,16 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
 
         textView.textStorage?.delegate = highlighter
         textView.delegate = self
+        if MarkdownTextView.attachmentDirectoryProvider == nil {
+            // Imagem colada: `anexos/` ao lado do documento salvo; rascunho usa a pasta do app.
+            MarkdownTextView.attachmentDirectoryProvider = { tv in
+                if let dir = MarkdownTextView.documentFolderProvider?(tv) { return dir.appendingPathComponent("anexos", isDirectory: true) }
+                return SessionStore.directory.appendingPathComponent("Anexos", isDirectory: true)
+            }
+            MarkdownTextView.documentFolderProvider = { tv in
+                (tv.window?.windowController as? DocumentWindowController)?.doc?.fileURL?.deletingLastPathComponent()
+            }
+        }
         textView.onEscape = { [weak self] in
             guard let self, self.focusMode else { return false }
             self.toggleFocusMode(nil)

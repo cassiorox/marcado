@@ -389,6 +389,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         format.addItem(.separator())
         format.addItem(AppDelegate.item("Link…", #selector(MarkdownTextView.insertMarkdownLink(_:)), "k"))
         format.addItem(AppDelegate.item("Imagem…", #selector(MarkdownTextView.insertMarkdownImage(_:)), "i", [.command, .shift]))
+        format.addItem(AppDelegate.item("Link para pasta ou arquivo…", #selector(MarkdownTextView.insertFileLink(_:)), "k", [.command, .option]))
         format.addItem(.separator())
         format.addItem(AppDelegate.item("Citação", #selector(MarkdownTextView.toggleQuote(_:)), ".", [.command, .shift]))
         format.addItem(AppDelegate.item("Lista", #selector(MarkdownTextView.toggleBulletList(_:)), "l", [.command, .shift]))

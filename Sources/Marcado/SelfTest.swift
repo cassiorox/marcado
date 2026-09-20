@@ -26,6 +26,51 @@ enum SelfTest {
         }
         let r = { (l: Int, n: Int) in NSRange(location: l, length: n) }
 
+        // Links para pasta/arquivo e imagem colada.
+        do {
+            let tmp = tmpSupport.appendingPathComponent("Pasta (teste) com espaço", isDirectory: true)
+            try? FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
+            let file = tmp.appendingPathComponent("relatorio final.pdf")
+            FileManager.default.createFile(atPath: file.path, contents: Data("x".utf8))
+            func expect(_ name: String, _ got: String, _ want: String) {
+                if got == want { print("ok   \(name)") } else { failures += 1; print("FALHA \(name)\n  esperado: \(want.debugDescription)\n  obtido:   \(got.debugDescription)") }
+            }
+            expect("link de pasta com espaço", MarkdownTextView.markdownLink(for: tmp), "[Pasta (teste) com espaço](<\(tmp.path)>)")
+            expect("link de arquivo relativo ao documento", MarkdownTextView.markdownLink(for: file, relativeTo: tmpSupport),
+                   "[relatorio final](<Pasta (teste) com espaço/relatorio final.pdf>)")
+            expect("caminho sem espaço fica sem <>", MarkdownTextView.destination(URL(fileURLWithPath: "/tmp/a.txt")), "/tmp/a.txt")
+
+            let pb = NSPasteboard(name: NSPasteboard.Name("marcado-selftest-\(getpid())"))
+            pb.clearContents()
+            pb.writeObjects([tmp as NSURL])
+            let (_, tv) = MarkdownTextView.make()
+            tv.string = "antes\n"
+            tv.setSelectedRange(r(6, 0))
+            expect("cola URL de pasta do Finder como link", tv.insertFromPasteboard(pb) ? tv.string : "(não tratou)", "antes\n[Pasta (teste) com espaço](<\(tmp.path)>)")
+
+            pb.clearContents()
+            pb.setString("/nao/existe/caminho", forType: .string)
+            expect("texto que não é caminho existente segue normal", tv.insertFromPasteboard(pb) ? "tratou" : "não tratou", "não tratou")
+
+            pb.clearContents()
+            pb.setString(tmp.path, forType: .string)
+            tv.string = ""
+            expect("caminho existente colado como texto vira link", tv.insertFromPasteboard(pb) ? tv.string : "(não tratou)", "[Pasta (teste) com espaço](<\(tmp.path)>)")
+
+            let img = NSImage(size: NSSize(width: 4, height: 4), flipped: false) { rect in NSColor.red.setFill(); rect.fill(); return true }
+            pb.clearContents()
+            pb.writeObjects([img])
+            let anexos = tmpSupport.appendingPathComponent("Anexos")
+            MarkdownTextView.attachmentDirectoryProvider = { _ in anexos }
+            tv.string = ""
+            let handled = tv.insertFromPasteboard(pb)
+            let files = (try? FileManager.default.contentsOfDirectory(atPath: anexos.path)) ?? []
+            let ok = handled && files.count == 1 && files[0].hasPrefix("imagem-") && files[0].hasSuffix(".png")
+                && tv.string == "![\(files[0].dropLast(4))](\(MarkdownTextView.destination(anexos.appendingPathComponent(files[0]))))"
+            expect("imagem colada vira PNG em Anexos + ![]()", ok ? "ok" : "handled=\(handled) files=\(files) texto=\(tv.string)", "ok")
+            pb.releaseGlobally()
+        }
+
         check("negrito na seleção", "ola mundo", r(4, 5), { $0.toggleBold(nil) }, "ola **mundo**")
         check("remove negrito (marcas fora)", "ola **mundo**", r(6, 5), { $0.toggleBold(nil) }, "ola mundo")
         check("remove negrito (marcas dentro)", "ola **mundo**", r(4, 9), { $0.toggleBold(nil) }, "ola mundo")

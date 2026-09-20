@@ -58,6 +58,12 @@ documentos do Mac, sem pasta de notas obrigatória, sem banco e sem servidor.
 - Realce de sintaxe Markdown no editor.
 - Barra de ferramentas e atalhos para negrito, itálico, riscado, código, títulos, citação, listas,
   lista de tarefas, link, imagem, bloco de código, tabela e linha horizontal. Aplicar de novo remove.
+- Colar imagem (⌘V com captura de tela ou imagem copiada): vira PNG em `anexos/` ao lado do
+  documento (rascunho usa `Application Support/Marcado/Anexos/`) e entra como `![](...)`.
+- Colar ou arrastar pasta ou arquivo do Finder (ou um caminho absoluto copiado) vira link; imagem
+  vira `![]()`. Formatar > Link para pasta ou arquivo… (⌥⌘K) abre o painel para escolher.
+- Na visualização, link para pasta abre no Finder e link para arquivo abre no app padrão. Link do
+  YouTube sozinho num parágrafo vira cartão com a thumbnail; clicar abre o vídeo.
 - Localizar e substituir, verificação ortográfica, desfazer ilimitado.
 - Modo foco (esconde tudo menos o texto) e máquina de escrever (linha atual sempre no meio).
 - Contagem de palavras e caracteres, tempo de leitura e posição do cursor.
@@ -97,6 +103,7 @@ Abrir com > Alterar tudo).
 | Próximo tema | ⌃⌘T |
 | Localizar, Localizar e substituir | ⌘F, ⌥⌘F |
 | Negrito, itálico, riscado, código | ⌘B, ⌘I, ⇧⌘X, ⌘E |
+| Link, imagem, link para pasta ou arquivo | ⌘K, ⇧⌘I, ⌥⌘K |
 | Título 1 a 6, texto normal | ⌥⌘1 a ⌥⌘6, ⌥⌘0 |
 | Link, imagem | ⌘K, ⇧⌘I |
 | Citação, lista, numerada, tarefas | ⇧⌘., ⇧⌘L, ⇧⌘O, ⇧⌘C |
@@ -156,6 +163,7 @@ Sources/Marcado/
   Session/SessionStore.swift  sessão, rascunhos, recentes; MarcadoDocumentController
   Sidebar/SidebarView.swift   barra lateral (abertos e recentes) e ThemedSplitView
   Editor/MarkdownTextView.swift   NSTextView TextKit 1, largura máxima, máquina de escrever, linhas
+  Editor/Attachments.swift    colar/arrastar imagem, pasta e arquivo; painel Link para pasta ou arquivo
   Editor/SyntaxHighlighter.swift  realce por regex no NSTextStorageDelegate (parágrafo editado)
   Editor/Formatter.swift          ações de formatação com desfazer
   Preview/PreviewView.swift       WKWebView com preview.html, render com atraso, rolagem sincronizada
@@ -184,6 +192,13 @@ make-icon.swift               gera Resources/AppIcon.icns
   máquina de escrever e na rolagem sincronizada.
 - O scroll view do editor tem `automaticallyAdjustsContentInsets = false`; sem isso ele abria
   rolado 28 pt para baixo.
+- **Colar intercepta só o que não é texto comum.** `paste(_:)` trata arquivos/pastas do Finder,
+  caminho absoluto existente e imagem sem texto junto; o resto segue para o NSTextView. A ordem
+  importa: texto vem antes de imagem, senão cópia de planilha (texto + TIFF) viraria PNG.
+- **Link de pasta no preview.** O caminho vai entre `<>` quando tem espaço (CommonMark); o WebKit
+  resolve como `file://` e `decidePolicyFor` cancela a navegação e manda para `NSWorkspace.open`,
+  que abre pasta no Finder e arquivo no app padrão. Cartão do YouTube é regra do markdown-it
+  (`youtube_cards`), então vale também na exportação.
 - **Largura do editor segue o painel à força.** Com a janela em segundo plano (aba não visível,
   troca de modo, redimensionamento) o `autoresizingMask` do NSTextView não acompanhava o clip view:
   o texto ficava com a largura antiga, cortado na borda do painel, e a barra de rolagem aparecia

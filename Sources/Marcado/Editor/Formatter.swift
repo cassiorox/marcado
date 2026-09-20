@@ -6,7 +6,7 @@ extension MarkdownTextView {
 
     // MARK: - Utilitários
 
-    fileprivate func replace(_ range: NSRange, with text: String, select sel: NSRange, action: String) {
+    func replace(_ range: NSRange, with text: String, select sel: NSRange, action: String) {
         guard shouldChangeText(in: range, replacementString: text) else { return }
         textStorage?.replaceCharacters(in: range, with: text)
         didChangeText()
@@ -219,6 +219,7 @@ extension MarkdownTextView {
         #selector(insertMarkdownImage(_:)), #selector(setHeading(_:)), #selector(toggleQuote(_:)),
         #selector(toggleBulletList(_:)), #selector(toggleNumberedList(_:)), #selector(toggleTaskList(_:)),
         #selector(insertCodeBlock(_:)), #selector(insertTable(_:)), #selector(insertHorizontalRule(_:)),
+        #selector(insertFileLink(_:)),
     ]
 
     override func validateUserInterfaceItem(_ item: NSValidatedUserInterfaceItem) -> Bool {
