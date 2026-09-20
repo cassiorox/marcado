@@ -59,8 +59,10 @@ final class MarkdownTextView: NSTextView {
         guard let clip = enclosingScrollView?.contentView else { return }
         let w = clip.bounds.width
         if w > 0, abs(frame.width - w) > 0.5 {
+            // Só a largura: a altura o NSTextView acerta sozinho quando o layout termina.
+            // Chamar sizeToFit aqui, no meio do layout, deixava trechos sem redesenhar.
             setFrameSize(NSSize(width: w, height: frame.height))
-            sizeToFit()
+            needsDisplay = true
         }
         if clip.bounds.origin.x != 0 {
             clip.setBoundsOrigin(NSPoint(x: 0, y: clip.bounds.origin.y))

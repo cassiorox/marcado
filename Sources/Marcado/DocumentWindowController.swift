@@ -158,11 +158,14 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
     }
 
     func splitView(_ sv: NSSplitView, constrainMinCoordinate proposed: CGFloat, ofSubviewAt index: Int) -> CGFloat {
-        sv === outerSplit ? max(proposed, 180) : max(proposed, 240)
+        if sv === outerSplit { return max(proposed, 180) }
+        // Com um painel escondido o divisor vai até a borda; o limite vale só no modo dividido.
+        return mode == .split ? max(proposed, 240) : proposed
     }
 
     func splitView(_ sv: NSSplitView, constrainMaxCoordinate proposed: CGFloat, ofSubviewAt index: Int) -> CGFloat {
-        sv === outerSplit ? min(proposed, 480, sv.bounds.width - 320) : min(proposed, sv.bounds.width - 240)
+        if sv === outerSplit { return min(proposed, 480, sv.bounds.width - 320) }
+        return mode == .split ? min(proposed, sv.bounds.width - 240) : proposed
     }
 
     func splitView(_ sv: NSSplitView, shouldAdjustSizeOfSubview view: NSView) -> Bool {
@@ -202,17 +205,19 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
     /// pode ter ficado com frames velhos (painel escondido ainda ocupando espaço, editor largo demais).
     private func relayoutPanes() {
         outerSplit.adjustSubviews()
-        splitView.adjustSubviews()
-        if mode == .split {
-            let w = splitView.bounds.width
-            let editorW = editorScroll.frame.width
-            // Só recentraliza se algum painel ficou inválido; respeita a posição arrastada pelo usuário.
-            if editorW < 240 || w - editorW < 240 {
-                splitView.setPosition((w / 2).rounded(), ofDividerAt: 0)
-            }
-        }
+        placeDivider(centerIfSplit: false)
         textView.fitWidthToClip()
         textView.updateInsets()
+        redrawPanes()
+    }
+
+    /// O NSSplitView não apaga o divisor antigo quando um painel some (ficava uma linha cinza no
+    /// meio do editor no modo "Só editor"); força o redesenho de tudo.
+    private func redrawPanes() {
+        outerSplit.needsDisplay = true
+        splitView.needsDisplay = true
+        editorScroll.needsDisplay = true
+        textView.needsDisplay = true
     }
 
     func windowWillReturnUndoManager(_ window: NSWindow) -> UndoManager? {
@@ -333,14 +338,13 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
         mode = m
         editorScroll.isHidden = (m == .reader)
         preview.isHidden = (m == .editor)
-        splitView.adjustSubviews()
-        if m == .split {
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                self.splitView.setPosition((self.splitView.bounds.width / 2).rounded(), ofDividerAt: 0)
-                self.textView.fitWidthToClip()
-                self.textView.updateInsets()
-            }
+        placeDivider(centerIfSplit: true)
+        // O split view só assenta o divisor depois do próximo layout; repete então.
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.placeDivider(centerIfSplit: true)
+            self.textView.fitWidthToClip()
+            self.textView.updateInsets()
         }
         textView.typewriter = Settings.typewriter && m != .reader
         if m != .editor && (previous == .editor || !didInitialLayout) {
@@ -356,6 +360,26 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
         if persist { Settings.viewMode = m }
         textView.fitWidthToClip()
         textView.updateInsets()
+    }
+
+    /// Posiciona o divisor editor|preview conforme o modo. Com um painel escondido, o NSSplitView
+    /// deixava o divisor onde estava (uma linha cinza no meio do editor no modo "Só editor") até
+    /// a janela ser redimensionada; empurrar para a borda resolve. No dividido, centraliza só
+    /// quando pedido ou quando algum painel ficou inválido, respeitando a posição arrastada.
+    private func placeDivider(centerIfSplit: Bool) {
+        splitView.adjustSubviews()
+        let w = splitView.bounds.width
+        guard w > 0 else { return }
+        switch mode {
+        case .editor: splitView.setPosition(w, ofDividerAt: 0)
+        case .reader: splitView.setPosition(0, ofDividerAt: 0)
+        case .split:
+            let editorW = editorScroll.frame.width
+            if centerIfSplit || editorW < 240 || w - editorW < 240 {
+                splitView.setPosition((w / 2).rounded(), ofDividerAt: 0)
+            }
+        }
+        splitView.needsDisplay = true
     }
 
     @objc func showEditorOnly(_ sender: Any?) { exitFocusIfNeeded(); setMode(.editor) }

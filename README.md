@@ -203,8 +203,13 @@ make-icon.swift               gera Resources/AppIcon.icns
   troca de modo, redimensionamento) o `autoresizingMask` do NSTextView não acompanhava o clip view:
   o texto ficava com a largura antiga, cortado na borda do painel, e a barra de rolagem aparecia
   solta no meio da janela (faixa cinza tracejada). `MarkdownTextView.fitWidthToClip()` ajusta a
-  largura e zera o deslocamento horizontal a cada mudança de frame do clip view; a janela também
-  refaz o layout dos split views ao virar chave (`relayoutPanes`).
+  largura e zera o deslocamento horizontal a cada mudança de frame do clip view (só a largura:
+  chamar `sizeToFit` ali, no meio do layout, deixava linhas fantasmas depois do Enter); a janela
+  também refaz o layout dos split views ao virar chave (`relayoutPanes`).
+- **Divisor com painel escondido.** Ao trocar de modo, o NSSplitView deixava o divisor onde estava
+  (linha cinza no meio do editor no "Só editor") até um redimensionamento. `placeDivider` empurra
+  o divisor para a borda (fim no editor, início na leitura) e o delegate só aplica o mínimo de
+  240 pt no modo dividido, senão o empurrão é travado a 240 pt da borda.
 - O realce recalcula o documento inteiro quando a edição envolve cercas de código (```` ``` ````)
   ou colagens grandes; do contrário só o parágrafo editado.
 - **Sessão é do app, não do sistema.** A restauração de janelas do macOS fica desligada
