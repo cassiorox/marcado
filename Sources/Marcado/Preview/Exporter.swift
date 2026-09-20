@@ -51,7 +51,8 @@ final class Exporter: NSObject, WKNavigationDelegate {
         let ex = Exporter()
         active.insert(ex)
         ex.onLoad = { [ex] in
-            ex.webView.callAsyncJavaScript("return marcado.renderHTML(t)", arguments: ["t": markdown], in: nil, in: .page) { result in
+            ex.webView.callAsyncJavaScript("return marcado.renderHTML(t, b)",
+                                           arguments: ["t": markdown, "b": Settings.lineBreaks], in: nil, in: .page) { result in
                 ex.finish()
                 switch result {
                 case .success(let v): completion(v as? String)

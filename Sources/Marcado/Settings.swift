@@ -72,6 +72,14 @@ enum Settings {
         set { d.set(newValue, forKey: "syncScroll"); changed() }
     }
 
+    /// Quebra simples de linha no editor vira quebra na visualização (`breaks` do markdown-it).
+    /// Desligado, vale o Markdown padrão: só linha em branco separa parágrafo, o que é melhor
+    /// para documentos já quebrados em 80 colunas.
+    static var lineBreaks: Bool {
+        get { d.object(forKey: "lineBreaks") == nil ? true : d.bool(forKey: "lineBreaks") }
+        set { d.set(newValue, forKey: "lineBreaks"); changed() }
+    }
+
     /// Blocos de código quebram a linha em vez de rolar para o lado (preview e HTML exportado).
     static var wrapCode: Bool {
         get { d.object(forKey: "wrapCode") as? Bool ?? true }
@@ -103,6 +111,7 @@ enum Settings {
             "width": readerWidth.rawValue,
             "lh": lineSpacing.css,
             "wrapCode": wrapCode,
+            "breaks": lineBreaks,
         ]
     }
 }

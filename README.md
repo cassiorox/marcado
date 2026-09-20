@@ -63,7 +63,9 @@ documentos do Mac, sem pasta de notas obrigatória, sem banco e sem servidor.
 - Colar ou arrastar pasta ou arquivo do Finder (ou um caminho absoluto copiado) vira link; imagem
   vira `![]()`. Formatar > Link para pasta ou arquivo… (⌥⌘K) abre o painel para escolher.
 - Na visualização, link para pasta abre no Finder e link para arquivo abre no app padrão. Link do
-  YouTube sozinho num parágrafo vira cartão com a thumbnail; clicar abre o vídeo.
+  YouTube sozinho numa linha vira cartão com a thumbnail; clicar abre o vídeo.
+- Quebra simples de linha aparece como quebra na visualização (Visualizar > Respeitar quebras de
+  linha, ligado). Desligue para ler documentos já quebrados em 80 colunas como Markdown padrão.
 - Localizar e substituir, verificação ortográfica, desfazer ilimitado.
 - Modo foco (esconde tudo menos o texto) e máquina de escrever (linha atual sempre no meio).
 - Contagem de palavras e caracteres, tempo de leitura e posição do cursor.
@@ -195,6 +197,11 @@ make-icon.swift               gera Resources/AppIcon.icns
 - **Colar intercepta só o que não é texto comum.** `paste(_:)` trata arquivos/pastas do Finder,
   caminho absoluto existente e imagem sem texto junto; o resto segue para o NSTextView. A ordem
   importa: texto vem antes de imagem, senão cópia de planilha (texto + TIFF) viraria PNG.
+- **Quebras de linha.** `breaks: true` no markdown-it é o padrão do app (Cassio escreve uma ideia
+  por linha); o Markdown puro juntaria as linhas num parágrafo só. O ajuste vem no objeto de
+  `marcado.apply`, que troca a opção e re-renderiza o último texto, e vai também para
+  `renderHTML(t, breaks)` na exportação. Por causa disso o cartão do YouTube procura link sozinho
+  na LINHA (entre quebras), não só no parágrafo inteiro.
 - **Link de pasta no preview.** O caminho vai entre `<>` quando tem espaço (CommonMark); o WebKit
   resolve como `file://` e `decidePolicyFor` cancela a navegação e manda para `NSWorkspace.open`,
   que abre pasta no Finder e arquivo no app padrão. Cartão do YouTube é regra do markdown-it

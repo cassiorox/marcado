@@ -137,6 +137,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         Settings.wrapCode.toggle()
     }
 
+    @objc func toggleLineBreaks(_ sender: Any?) {
+        Settings.lineBreaks.toggle()
+    }
+
     @objc func makeDefaultForMarkdown(_ sender: Any?) {
         guard let type = UTType("net.daringfireball.markdown") else { return }
         NSWorkspace.shared.setDefaultApplication(at: Bundle.main.bundleURL, toOpen: type) { error in
@@ -214,6 +218,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         case #selector(setLineSpacing(_:)): item.state = LineSpacing.allCases[item.tag] == Settings.lineSpacing ? .on : .off
         case #selector(toggleTypewriter(_:)): item.state = Settings.typewriter ? .on : .off
         case #selector(toggleWrapCode(_:)): item.state = Settings.wrapCode ? .on : .off
+        case #selector(toggleLineBreaks(_:)): item.state = Settings.lineBreaks ? .on : .off
         default: break
         }
         return true
@@ -409,6 +414,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         view.addItem(.separator())
         view.addItem(AppDelegate.item("Modo foco", #selector(DocumentWindowController.toggleFocusMode(_:)), "f", [.command, .shift]))
         view.addItem(AppDelegate.item("Máquina de escrever", #selector(toggleTypewriter(_:)), "t", [.command, .shift]))
+        view.addItem(AppDelegate.item("Respeitar quebras de linha", #selector(toggleLineBreaks(_:)), ""))
         view.addItem(AppDelegate.item("Quebrar linhas nos blocos de código", #selector(toggleWrapCode(_:)), "l", [.command, .option]))
         view.addItem(AppDelegate.item("Rolagem sincronizada", #selector(DocumentWindowController.toggleSyncScroll(_:)), ""))
         view.addItem(AppDelegate.item("Barra de status", #selector(DocumentWindowController.toggleStatusBar(_:)), "/"))

@@ -3,7 +3,9 @@
 (function () {
   "use strict";
 
-  const md = window.markdownit({ html: true, linkify: true, typographer: false, breaks: false });
+  // breaks: true = quebra simples de linha vira <br>, como o usuário escreveu. O app troca
+  // isso pelo ajuste "Respeitar quebras de linha" (marcado.apply / renderHTML).
+  const md = window.markdownit({ html: true, linkify: true, typographer: false, breaks: true });
 
   // Marca cada bloco com a linha de origem, para a rolagem sincronizada com o editor.
   md.core.ruler.push("source_lines", function (state) {
@@ -47,21 +49,29 @@
       const t = toks[i];
       if (t.type !== "inline" || toks[i - 1].type !== "paragraph_open") continue;
       const c = t.children;
-      if (!c || c.length !== 3 || c[0].type !== "link_open" || c[1].type !== "text" || c[2].type !== "link_close") continue;
-      const href = c[0].attrGet("href") || "";
-      const id = youtubeID(href);
-      if (!id) continue;
-      const label = c[1].content.trim();
-      const caption = label && label !== href && label !== href.replace(/^https?:\/\//, "") ? label : "";
-      const card = new state.Token("html_inline", "", 0);
-      card.content =
-        '<a class="yt-card" href="' + escapeAttr(href) + '" title="Abrir no YouTube">' +
-        '<span class="yt-thumb"><img src="https://img.youtube.com/vi/' + id + '/hqdefault.jpg" alt="" loading="lazy">' +
-        '<span class="yt-play" aria-hidden="true"></span></span>' +
-        (caption ? '<span class="yt-caption">' + escapeAttr(caption) + "</span>" : "") +
-        "</a>";
-      t.children = [card];
-      toks[i - 1].attrJoin("class", "yt-block");
+      if (!c) continue;
+      // Um link sozinho na linha (começo/fim do parágrafo ou entre quebras) vira cartão.
+      for (let j = 0; j + 2 < c.length + 0; j++) {
+        if (c[j].type !== "link_open" || c[j + 1].type !== "text" || c[j + 2].type !== "link_close") continue;
+        const before = j === 0 ? null : c[j - 1];
+        const after = j + 3 >= c.length ? null : c[j + 3];
+        const alone = (!before || before.type === "softbreak" || before.type === "hardbreak") &&
+                      (!after || after.type === "softbreak" || after.type === "hardbreak");
+        if (!alone) continue;
+        const href = c[j].attrGet("href") || "";
+        const id = youtubeID(href);
+        if (!id) continue;
+        const label = c[j + 1].content.trim();
+        const caption = label && label !== href && label !== href.replace(/^https?:\/\//, "") ? label : "";
+        const card = new state.Token("html_inline", "", 0);
+        card.content =
+          '<a class="yt-card" href="' + escapeAttr(href) + '" title="Abrir no YouTube">' +
+          '<span class="yt-thumb"><img src="https://img.youtube.com/vi/' + id + '/hqdefault.jpg" alt="" loading="lazy">' +
+          '<span class="yt-play" aria-hidden="true"></span></span>' +
+          (caption ? '<span class="yt-caption">' + escapeAttr(caption) + "</span>" : "") +
+          "</a>";
+        c.splice(j, 3, card);
+      }
     }
   });
 
@@ -113,6 +123,7 @@
   let blocks = [];
   let userScrollUntil = 0;
   let totalLines = 0;
+  let lastText = "";
 
   function post(msg) {
     try { window.webkit.messageHandlers.marcado.postMessage(msg); } catch (e) { /* fora do app */ }
@@ -191,10 +202,14 @@
   }
 
   window.marcado = {
-    renderHTML: function (text) { return md.render(text); },
+    renderHTML: function (text, breaks) {
+      if (typeof breaks === "boolean") md.set({ breaks: breaks });
+      return md.render(text);
+    },
 
     render: function (text, baseURL, line) {
       setBase(baseURL);
+      lastText = text;
       totalLines = text.split("\n").length;
       if (text.trim() === "") {
         content.innerHTML = '<p class="empty-state">Nada para mostrar ainda.</p>';
@@ -207,6 +222,10 @@
     },
 
     apply: function (s) {
+      if (typeof s.breaks === "boolean" && md.options.breaks !== s.breaks) {
+        md.set({ breaks: s.breaks });
+        if (lastText) window.marcado.render(lastText, null, -1);
+      }
       root.dataset.theme = s.theme;
       root.style.setProperty("--reader-font", s.font);
       root.style.setProperty("--reader-size", s.size + "px");
