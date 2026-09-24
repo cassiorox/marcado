@@ -224,6 +224,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         return true
     }
 
+    @objc func showSettings(_ sender: Any?) { AISettingsWindowController.shared.show() }
+
     // MARK: - Menus
 
     static func item(_ title: String, _ action: Selector?, _ key: String = "", _ mods: NSEvent.ModifierFlags = [.command], tag: Int = 0) -> NSMenuItem {
@@ -329,6 +331,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         let app = NSMenu(title: "Marcado")
         app.addItem(AppDelegate.item("Sobre o Marcado", #selector(NSApplication.orderFrontStandardAboutPanel(_:)), ""))
         app.addItem(.separator())
+        app.addItem(AppDelegate.item("Ajustes…", #selector(showSettings(_:)), ","))
+        app.addItem(.separator())
         app.addItem(AppDelegate.item("Definir como app padrão para .md", #selector(makeDefaultForMarkdown(_:)), ""))
         app.addItem(.separator())
         let services = NSMenu(title: "Serviços")
@@ -421,6 +425,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         format.addItem(AppDelegate.item("Tabela", #selector(MarkdownTextView.insertTable(_:)), "t", [.command, .option]))
         format.addItem(AppDelegate.item("Linha horizontal", #selector(MarkdownTextView.insertHorizontalRule(_:)), "-", [.command, .option]))
         main.addItem(submenu("Formatar", format))
+        main.addItem(submenu("IA", MarkdownTextView.aiMenu()))
 
         // Visualizar
         let view = NSMenu(title: "Visualizar")

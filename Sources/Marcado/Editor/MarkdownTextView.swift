@@ -90,15 +90,19 @@ final class MarkdownTextView: NSTextView {
 
     // MARK: - Menu do botão direito
 
-    /// Coloca "Destacar" no topo do menu de contexto, como no Notion.
+    /// Coloca "IA" e "Destacar" no topo do menu de contexto, como no Notion.
     override func menu(for event: NSEvent) -> NSMenu? {
         let menu = super.menu(for: event) ?? NSMenu()
         guard isEditable else { return menu }
         let item = NSMenuItem(title: "Destacar", action: nil, keyEquivalent: "")
         item.image = NSImage(systemSymbolName: "highlighter", accessibilityDescription: nil)
         item.submenu = AppDelegate.highlightMenu()
-        menu.insertItem(item, at: 0)
-        menu.insertItem(.separator(), at: 1)
+        let ai = NSMenuItem(title: "IA", action: nil, keyEquivalent: "")
+        ai.image = NSImage(systemSymbolName: "sparkles", accessibilityDescription: nil)
+        ai.submenu = MarkdownTextView.aiMenu()
+        menu.insertItem(ai, at: 0)
+        menu.insertItem(item, at: 1)
+        menu.insertItem(.separator(), at: 2)
         return menu
     }
 

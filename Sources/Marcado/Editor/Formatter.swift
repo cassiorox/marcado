@@ -318,7 +318,7 @@ extension MarkdownTextView {
         #selector(toggleBulletList(_:)), #selector(toggleNumberedList(_:)), #selector(toggleTaskList(_:)),
         #selector(insertCodeBlock(_:)), #selector(insertTable(_:)), #selector(insertHorizontalRule(_:)),
         #selector(insertFileLink(_:)), #selector(highlightText(_:)), #selector(highlightWithLastColor(_:)),
-        #selector(removeHighlight(_:)),
+        #selector(removeHighlight(_:)), #selector(aiAsk(_:)), #selector(aiRun(_:)),
     ]
 
     override func validateUserInterfaceItem(_ item: NSValidatedUserInterfaceItem) -> Bool {

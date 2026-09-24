@@ -109,6 +109,42 @@ enum SelfTest {
         let words = StatusBarView.countWords("Olá, mundo! Isto é um teste de contagem.")
         if words == 8 { print("ok   contagem de palavras") } else { failures += 1; print("FALHA contagem: \(words)") }
 
+        // IA: limpeza da resposta, gravação das chaves, montagem do painel e dos Ajustes.
+        do {
+            func expect(_ ok: Bool, _ name: String) {
+                if ok { print("ok   \(name)") } else { failures += 1; print("FALHA \(name)") }
+            }
+            expect(AIPanelController.stripFences("```markdown\n- a\n- b\n```") == "- a\n- b", "IA tira cerca ``` em volta da resposta")
+            expect(AIPanelController.stripFences("texto com `código`") == "texto com `código`", "IA mantém resposta sem cerca")
+            var cfg = AIConfig()
+            cfg.provider = .openrouter
+            cfg.openRouterKey = "sk-or-teste"
+            cfg.openRouterModel = ""
+            try? cfg.save()
+            let perms = (try? FileManager.default.attributesOfItem(atPath: AIConfig.fileURL.path)[.posixPermissions] as? Int) ?? 0
+            let back = AIConfig.load()
+            expect(perms == 0o600 && back == cfg, "chaves de IA gravadas só para o usuário (600) e relidas")
+            expect(back.activeModel == AIConfig.defaultOpenRouterModel && back.isReady, "modelo vazio usa o padrão do provedor")
+
+            let (_, tv) = MarkdownTextView.make()
+            tv.string = "# PDI4 ADMAR\n\nRevisar metas do trimestre e enviar proposta."
+            let panel = AIPanelController(textView: tv, action: .tarefas, range: NSRange(location: 14, length: 44),
+                                          isSelection: true, note: tv.string)
+            panel.resultView.string = "- [ ] Revisar metas do trimestre\n- [ ] Enviar proposta"
+            panel.window.layoutIfNeeded()
+            let settings = AISettingsWindowController.shared
+            settings.window?.layoutIfNeeded()
+            expect(panel.window.contentView?.fittingSize.width ?? 0 > 0 && settings.window?.contentView != nil, "painel da IA e Ajustes montam")
+            // MARCADO_SNAPSHOT=/pasta grava PNG do painel e dos Ajustes para conferir o layout.
+            if let dir = ProcessInfo.processInfo.environment["MARCADO_SNAPSHOT"] {
+                for (name, w) in [("painel-ia", panel.window), ("ajustes-ia", settings.window!)] {
+                    guard let v = w.contentView, let rep = v.bitmapImageRepForCachingDisplay(in: v.bounds) else { continue }
+                    v.cacheDisplay(in: v.bounds, to: rep)
+                    try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: dir).appendingPathComponent(name + ".png"))
+                }
+            }
+        }
+
         // Documento: tipo padrão, edição marca alterado, gravação e leitura.
         let dc = NSDocumentController.shared
         if let t = dc.defaultType, t == "net.daringfireball.markdown", dc.documentClass(forType: t) == MarkdownDocument.self {

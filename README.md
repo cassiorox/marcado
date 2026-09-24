@@ -5,7 +5,7 @@ bonita, no estilo de site de notícias, e deixa editar quando precisa. Guarda o 
 mesmo sem salvar e, ao abrir de novo, volta exatamente de onde você parou.
 
 Somente para macOS 14 Sonoma ou mais novo (inclui macOS 26). Feito em Swift e AppKit, sem Electron,
-sem servidor, sem conta e sem nenhuma conexão de rede.
+sem servidor e sem conta. A única conexão de rede é a do menu IA, opcional e só quando você usa.
 
 ![Marcado no tema Sépia, com editor e visualização lado a lado](docs/dividido.png)
 
@@ -81,6 +81,19 @@ documentos do Mac, sem pasta de notas obrigatória, sem banco e sem servidor.
 - Modo foco (esconde tudo menos o texto) e máquina de escrever (linha atual sempre no meio).
 - Contagem de palavras e caracteres, tempo de leitura e posição do cursor.
 
+**IA (opcional)**
+- Botão direito no editor > IA, ou o menu IA: Perguntar à IA (⌥⌘J, pedido livre), Resumir,
+  Organizar em tópicos, Melhorar a redação, Corrigir ortografia e gramática, Deixar mais curto,
+  Transformar em prompt, Extrair tarefas, Explicar e aprofundar, Continuar escrevendo e Traduzir
+  para inglês.
+- Vale para o trecho selecionado ou, sem seleção, para a nota inteira. No pedido livre com
+  seleção, a nota inteira vai junto como contexto.
+- A resposta aparece aos poucos num painel, onde dá para editar o pedido e gerar de novo, editar
+  a resposta e escolher Substituir (seleção ou nota), Inserir abaixo ou Copiar. Substituir e
+  inserir entram no desfazer (⌘Z).
+- Marcado > Ajustes (⌘,): escolha entre a API da Claude (Anthropic) e a OpenRouter, com chave e
+  modelo de cada uma. Padrões: `claude-opus-5` e `anthropic/claude-opus-5`. Botão Testar conexão.
+
 **Exportar**
 - HTML autônomo com o tema escolhido embutido.
 - PDF A4 paginado, com texto selecionável, sem cortar linhas nem separar título do parágrafo.
@@ -123,6 +136,7 @@ Abrir com > Alterar tudo).
 | Citação, lista, numerada, tarefas | ⇧⌘., ⇧⌘L, ⇧⌘O, ⇧⌘C |
 | Bloco de código, tabela, linha horizontal | ⇧⌘K, ⌥⌘T, ⌥⌘- |
 | Exportar HTML, exportar PDF, imprimir | ⇧⌘E, ⌥⇧⌘E, ⌘P |
+| Perguntar à IA, Ajustes | ⌥⌘J, ⌘, |
 | Barra de status | ⌘/ |
 | Quebrar linhas nos blocos de código (liga/desliga) | ⌥⌘L |
 
@@ -182,6 +196,10 @@ Sources/Marcado/
   Editor/Formatter.swift          ações de formatação com desfazer
   Preview/PreviewView.swift       WKWebView com preview.html, render com atraso, rolagem sincronizada
   Preview/Exporter.swift          HTML autônomo e PDF A4 paginado
+  AI/AIClient.swift           config (ia.json) e chamada com streaming (Anthropic Messages ou OpenRouter)
+  AI/AIActions.swift          pedidos prontos, menu IA e abertura do painel
+  AI/AIPanel.swift            folha com pedido, resposta ao vivo e Substituir/Inserir/Copiar
+  AI/AISettings.swift         Marcado > Ajustes: provedor, chaves e modelos
 Resources/
   Info.plist                  tipos de documento (net.daringfireball.markdown, texto simples)
   web/preview.html            página do preview (CSP bloqueia scripts do documento)
@@ -232,6 +250,15 @@ make-icon.swift               gera Resources/AppIcon.icns
 - **Cores de destaque em dois lugares também:** `HighlightColor.colors(for:)` em `Theme.swift` e as
   variáveis `--mark-*` em `themes.css`, uma linha por tema. O `==texto==` é regra própria no
   `preview.js` (o markdown-it não traz); `<mark class>` passa porque o preview tem `html: true`.
+- **IA por HTTP puro.** Não há SDK da Anthropic para Swift: `AIClient` chama `/v1/messages` com
+  `stream: true` e lê o SSE (`content_block_delta`/`text_delta`). Em `claude-opus-5` e
+  `claude-fable-5-1` vai `fallbacks: "default"` (cabeçalho `server-side-fallback-2026-07-01`):
+  se o classificador recusar, a API refaz no modelo recomendado; outros modelos não aceitam.
+  OpenRouter usa `/api/v1/chat/completions` (formato OpenAI, `choices[0].delta.content`).
+- **Chaves em arquivo, não no Keychain.** O app é assinado ad hoc e cada compilação muda a
+  identidade; no Keychain o macOS pediria a senha a cada atualização. `ia.json` fica com
+  permissão 600 na pasta do app. `MARCADO_SNAPSHOT=/pasta --selftest` grava PNG do painel e dos
+  Ajustes para conferir o layout sem abrir janela.
 - O realce recalcula o documento inteiro quando a edição envolve cercas de código (```` ``` ````)
   ou colagens grandes; do contrário só o parágrafo editado.
 - **Sessão é do app, não do sistema.** A restauração de janelas do macOS fica desligada
