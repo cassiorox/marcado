@@ -17,7 +17,7 @@ extension MarkdownTextView {
         scrollRangeToVisible(selectedRange())
     }
 
-    private func wordRange(at loc: Int) -> NSRange {
+    func wordRange(at loc: Int) -> NSRange {
         let ns = string as NSString
         guard ns.length > 0 else { return NSRange(location: loc, length: 0) }
         let r = selectionRange(forProposedRange: NSRange(location: min(loc, ns.length), length: 0), granularity: .selectByWord)
@@ -141,6 +141,104 @@ extension MarkdownTextView {
         }
     }
 
+    // MARK: - Destaque colorido
+
+    /// Última cor usada (⇧⌘H e o clique no botão da barra repetem essa).
+    static var lastHighlight: HighlightColor = .amarelo
+
+    /// Destaque que envolve `range` na linha: `==x==` ou `<mark class="c">x</mark>`.
+    private func enclosingHighlight(_ range: NSRange) -> (outer: NSRange, inner: NSRange, color: HighlightColor)? {
+        let ns = string as NSString
+        let line = ns.lineRange(for: range)
+        for (re, innerGroup) in [(SyntaxHighlighter.markEquals, 1), (SyntaxHighlighter.markTag, 2)] {
+            for m in re.matches(in: string, range: line)
+            where range.length > 0
+                ? m.range.location <= range.location && NSMaxRange(range) <= NSMaxRange(m.range)
+                : m.range.location < range.location && range.location < NSMaxRange(m.range) {
+                var color = HighlightColor.amarelo
+                if innerGroup == 2, m.range(at: 1).location != NSNotFound {
+                    color = HighlightColor(name: ns.substring(with: m.range(at: 1))) ?? .amarelo
+                }
+                return (m.range, m.range(at: innerGroup), color)
+            }
+        }
+        return nil
+    }
+
+    /// Tira todos os destaques de um trecho, deixando só o texto.
+    static func stripHighlights(_ text: String) -> String {
+        var out = text
+        for (re, g) in [(SyntaxHighlighter.markTag, 2), (SyntaxHighlighter.markEquals, 1)] {
+            out = re.stringByReplacingMatches(in: out, range: NSRange(location: 0, length: (out as NSString).length),
+                                              withTemplate: "$\(g)")
+        }
+        return out
+    }
+
+    /// Aplica a cor (ou remove, com `nil`). Dentro de um destaque existente: mesma cor remove,
+    /// outra cor troca. Sem seleção vale a palavra do cursor; em várias linhas, cada linha
+    /// é destacada à parte, preservando o marcador de lista, citação ou título.
+    func applyHighlight(_ color: HighlightColor?) {
+        let ns = string as NSString
+        var sel = selectedRange()
+        let action = color == nil ? "Remover destaque" : "Destacar"
+
+        if let h = enclosingHighlight(sel) {
+            let inner = ns.substring(with: h.inner)
+            let text = (color == nil || color == h.color) ? inner : color!.wrap(inner)
+            let offset = (text as NSString).range(of: inner).location
+            replace(h.outer, with: text, select: NSRange(location: h.outer.location + offset, length: h.inner.length), action: action)
+            return
+        }
+
+        if sel.length == 0 { sel = wordRange(at: sel.location) }
+        let original = ns.substring(with: sel)
+        let plain = Self.stripHighlights(original)
+        guard let color else {
+            if plain != original {
+                replace(sel, with: plain, select: NSRange(location: sel.location, length: (plain as NSString).length), action: action)
+            }
+            return
+        }
+        if sel.length == 0 {
+            // Sem palavra: deixa as marcas prontas com o cursor no meio.
+            let empty = color.wrap("")
+            let caret = color == .amarelo ? 2 : (empty as NSString).length - 7
+            replace(sel, with: empty, select: NSRange(location: sel.location + caret, length: 0), action: action)
+            return
+        }
+        let lines = plain.components(separatedBy: "\n")
+        if lines.count == 1 {
+            let inner = plain
+            let lead = (color.wrap(inner) as NSString).range(of: inner).location
+            replace(sel, with: color.wrap(inner),
+                    select: NSRange(location: sel.location + lead, length: (inner as NSString).length), action: action)
+            return
+        }
+        let out = lines.map { line -> String in
+            let p = parseLine(line)
+            let body = p.body.trimmingCharacters(in: .whitespaces)
+            guard !body.isEmpty else { return line }
+            let prefix = String(line.dropLast(p.body.count))
+            let trailing = String(p.body.reversed().prefix(while: { $0 == " " || $0 == "\t" }).reversed())
+            let leading = String(p.body.prefix(while: { $0 == " " || $0 == "\t" }))
+            return prefix + leading + color.wrap(body) + trailing
+        }.joined(separator: "\n")
+        replace(sel, with: out, select: NSRange(location: sel.location, length: (out as NSString).length), action: action)
+    }
+
+    /// tag = HighlightColor.rawValue; -1 remove o destaque.
+    @objc func highlightText(_ sender: Any?) {
+        let tag = (sender as? NSMenuItem)?.tag ?? (sender as? NSControl)?.tag ?? 0
+        guard tag >= 0, let c = HighlightColor(rawValue: tag) else { applyHighlight(nil); return }
+        Self.lastHighlight = c
+        applyHighlight(c)
+    }
+
+    @objc func highlightWithLastColor(_ sender: Any?) { applyHighlight(Self.lastHighlight) }
+
+    @objc func removeHighlight(_ sender: Any?) { applyHighlight(nil) }
+
     // MARK: - Ações de menu e barra
 
     @objc func toggleBold(_ sender: Any?) { toggleWrap("**", action: "Negrito") }
@@ -219,7 +317,8 @@ extension MarkdownTextView {
         #selector(insertMarkdownImage(_:)), #selector(setHeading(_:)), #selector(toggleQuote(_:)),
         #selector(toggleBulletList(_:)), #selector(toggleNumberedList(_:)), #selector(toggleTaskList(_:)),
         #selector(insertCodeBlock(_:)), #selector(insertTable(_:)), #selector(insertHorizontalRule(_:)),
-        #selector(insertFileLink(_:)),
+        #selector(insertFileLink(_:)), #selector(highlightText(_:)), #selector(highlightWithLastColor(_:)),
+        #selector(removeHighlight(_:)),
     ]
 
     override func validateUserInterfaceItem(_ item: NSValidatedUserInterfaceItem) -> Bool {

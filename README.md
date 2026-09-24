@@ -58,6 +58,12 @@ documentos do Mac, sem pasta de notas obrigatória, sem banco e sem servidor.
 - Realce de sintaxe Markdown no editor.
 - Barra de ferramentas e atalhos para negrito, itálico, riscado, código, títulos, citação, listas,
   lista de tarefas, link, imagem, bloco de código, tabela e linha horizontal. Aplicar de novo remove.
+- Destacar texto em 8 cores, como no Notion e no Obsidian: amarelo, verde, azul, rosa, roxo,
+  laranja, vermelho e cinza. Pela barra (clique repete a última cor, a setinha abre as cores),
+  por Formatar > Destacar, pelo botão direito sobre o texto ou com ⇧⌘H. Amarelo grava `==texto==`
+  (mesma sintaxe do Obsidian e do Typora); as outras cores gravam `<mark class="verde">texto</mark>`,
+  que abre como destaque em qualquer leitor de Markdown. Dentro de um destaque, a mesma cor remove
+  e outra cor troca. O editor já mostra o fundo colorido, e a exportação HTML e PDF mantém as cores.
 - Colar imagem (⌘V com captura de tela ou imagem copiada): vira PNG em `anexos/` ao lado do
   documento (rascunho usa `Application Support/Marcado/Anexos/`) e entra como `![](...)`.
 - Colar ou arrastar pasta ou arquivo do Finder (ou um caminho absoluto copiado) vira link; imagem
@@ -105,6 +111,7 @@ Abrir com > Alterar tudo).
 | Próximo tema | ⌃⌘T |
 | Localizar, Localizar e substituir | ⌘F, ⌥⌘F |
 | Negrito, itálico, riscado, código | ⌘B, ⌘I, ⇧⌘X, ⌘E |
+| Destacar com a última cor usada | ⇧⌘H |
 | Link, imagem, link para pasta ou arquivo | ⌘K, ⇧⌘I, ⌥⌘K |
 | Título 1 a 6, texto normal | ⌥⌘1 a ⌥⌘6, ⌥⌘0 |
 | Link, imagem | ⌘K, ⇧⌘I |
@@ -217,6 +224,9 @@ make-icon.swift               gera Resources/AppIcon.icns
   (linha cinza no meio do editor no "Só editor") até um redimensionamento. `placeDivider` empurra
   o divisor para a borda (fim no editor, início na leitura) e o delegate só aplica o mínimo de
   240 pt no modo dividido, senão o empurrão é travado a 240 pt da borda.
+- **Cores de destaque em dois lugares também:** `HighlightColor.colors(for:)` em `Theme.swift` e as
+  variáveis `--mark-*` em `themes.css`, uma linha por tema. O `==texto==` é regra própria no
+  `preview.js` (o markdown-it não traz); `<mark class>` passa porque o preview tem `html: true`.
 - O realce recalcula o documento inteiro quando a edição envolve cercas de código (```` ``` ````)
   ou colagens grandes; do contrário só o parágrafo editado.
 - **Sessão é do app, não do sistema.** A restauração de janelas do macOS fica desligada
@@ -233,7 +243,7 @@ make-icon.swift               gera Resources/AppIcon.icns
 - O primeiro `NSDocumentController` criado vira o compartilhado: `main.swift` cria o
   `MarcadoDocumentController` antes de qualquer acesso a `NSDocumentController.shared`.
 - A barra de ferramentas guarda a configuração por identificador. Item novo na barra exige trocar
-  o identificador (hoje `MarcadoToolbar2`), senão quem já usou o app não vê o item.
+  o identificador (hoje `MarcadoToolbar3`), senão quem já usou o app não vê o item.
 
 ## Licença
 

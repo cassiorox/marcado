@@ -26,6 +26,72 @@ struct Palette {
     let accent: NSColor
     let border: NSColor
     let selection: NSColor
+    /// Fundo de cada cor de destaque, preenchido em `ReaderTheme.palette`.
+    var marks: [HighlightColor: NSColor] = [:]
+}
+
+/// Cores de destaque de texto, no estilo do Notion/Obsidian. Amarelo vira `==texto==` (mesma
+/// sintaxe do Obsidian e do Typora); as outras, `<mark class="verde">texto</mark>`.
+/// Os tons por tema precisam bater com as variáveis --mark-* de themes.css.
+enum HighlightColor: Int, CaseIterable {
+    case amarelo, verde, azul, rosa, roxo, laranja, vermelho, cinza
+
+    var name: String { String(describing: self) }
+
+    var title: String {
+        switch self {
+        case .amarelo: return "Amarelo"
+        case .verde: return "Verde"
+        case .azul: return "Azul"
+        case .rosa: return "Rosa"
+        case .roxo: return "Roxo"
+        case .laranja: return "Laranja"
+        case .vermelho: return "Vermelho"
+        case .cinza: return "Cinza"
+        }
+    }
+
+    init?(name: String) {
+        guard let c = Self.allCases.first(where: { $0.name == name }) else { return nil }
+        self = c
+    }
+
+    /// Envolve o texto na sintaxe da cor.
+    func wrap(_ text: String) -> String {
+        self == .amarelo ? "==\(text)==" : "<mark class=\"\(name)\">\(text)</mark>"
+    }
+
+    static func colors(for theme: ReaderTheme) -> [HighlightColor: NSColor] {
+        let hex: [String]
+        switch theme {
+        case .claro, .automatico:
+            hex = ["#ffe170", "#bfe8c4", "#c4dcff", "#fbc9df", "#ded2fb", "#ffd4a8", "#ffc9c4", "#e2e5e9"]
+        case .sepia:
+            hex = ["#f2d27a", "#c5e0b0", "#c8d8ec", "#f3c6cf", "#dccfe8", "#f5c998", "#f2bfae", "#e0d6bf"]
+        case .escuro:
+            hex = ["#6b5a1c", "#1f4d2e", "#1e3f6b", "#5e2443", "#3f2d66", "#653a12", "#662322", "#3a3f47"]
+        case .meianoite:
+            hex = ["#5a4a12", "#173d24", "#16335a", "#4d1c37", "#332456", "#53300e", "#541c1c", "#2b313a"]
+        }
+        var out: [HighlightColor: NSColor] = [:]
+        for c in allCases { out[c] = NSColor(hex: hex[c.rawValue]) }
+        return out
+    }
+
+    /// Amostra redonda para menus (tons do tema claro).
+    var swatch: NSImage {
+        let fill = Self.colors(for: .claro)[self]!
+        let img = NSImage(size: NSSize(width: 14, height: 14), flipped: false) { r in
+            let path = NSBezierPath(roundedRect: r.insetBy(dx: 1, dy: 1), xRadius: 3.5, yRadius: 3.5)
+            fill.setFill()
+            path.fill()
+            NSColor.black.withAlphaComponent(0.18).setStroke()
+            path.lineWidth = 1
+            path.stroke()
+            return true
+        }
+        return img
+    }
 }
 
 enum ReaderTheme: String, CaseIterable {
@@ -51,6 +117,12 @@ enum ReaderTheme: String, CaseIterable {
     var isDark: Bool { self == .escuro || self == .meianoite }
 
     var palette: Palette {
+        var p = basePalette
+        p.marks = HighlightColor.colors(for: self)
+        return p
+    }
+
+    private var basePalette: Palette {
         switch self {
         case .claro, .automatico:
             return Palette(bg: NSColor(hex: "#ffffff"), text: NSColor(hex: "#1d232b"), muted: NSColor(hex: "#8a929c"),

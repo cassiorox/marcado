@@ -233,6 +233,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         return i
     }
 
+    /// Cores de destaque (menu Formatar, botão da barra e clique com o botão direito).
+    static func highlightMenu() -> NSMenu {
+        let m = NSMenu(title: "Destacar")
+        m.addItem(item("Destacar com a última cor", #selector(MarkdownTextView.highlightWithLastColor(_:)), "h", [.command, .shift]))
+        m.addItem(.separator())
+        for c in HighlightColor.allCases {
+            let i = item(c.title, #selector(MarkdownTextView.highlightText(_:)), tag: c.rawValue)
+            i.image = c.swatch
+            m.addItem(i)
+        }
+        m.addItem(.separator())
+        m.addItem(item("Remover destaque", #selector(MarkdownTextView.removeHighlight(_:))))
+        return m
+    }
+
     static func headingMenu() -> NSMenu {
         let m = NSMenu(title: "Título")
         m.addItem(item("Texto normal", #selector(MarkdownTextView.setHeading(_:)), "0", [.command, .option], tag: 0))
@@ -389,6 +404,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         format.addItem(AppDelegate.item("Itálico", #selector(MarkdownTextView.toggleItalic(_:)), "i"))
         format.addItem(AppDelegate.item("Riscado", #selector(MarkdownTextView.toggleStrikethrough(_:)), "x", [.command, .shift]))
         format.addItem(AppDelegate.item("Código", #selector(MarkdownTextView.toggleInlineCode(_:)), "e"))
+        format.addItem(submenu("Destacar", AppDelegate.highlightMenu()))
         format.addItem(.separator())
         format.addItem(submenu("Título", AppDelegate.headingMenu()))
         format.addItem(.separator())

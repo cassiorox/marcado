@@ -92,6 +92,18 @@ enum SelfTest {
         check("bloco de código em linha vazia", "", r(0, 0), { $0.insertCodeBlock(nil) }, "```\n\n```")
         check("bloco de código na seleção", "x = 1\ny = 2\n", r(0, 11), { $0.insertCodeBlock(nil) }, "```\nx = 1\ny = 2\n```\n")
         check("linha horizontal", "texto", r(5, 0), { $0.insertHorizontalRule(nil) }, "texto\n\n---\n\n")
+        func hl(_ c: HighlightColor?) -> (MarkdownTextView) -> Void {
+            { tv in let m = NSMenuItem(); m.tag = c?.rawValue ?? -1; tv.highlightText(m) }
+        }
+        check("destaque amarelo", "ola mundo", r(4, 5), hl(.amarelo), "ola ==mundo==")
+        check("destaque verde na palavra do cursor", "ola mundo", r(6, 0), hl(.verde), "ola <mark class=\"verde\">mundo</mark>")
+        check("mesma cor remove", "ola ==mundo==", r(8, 0), hl(.amarelo), "ola mundo")
+        check("troca amarelo por azul", "ola ==mundo==", r(6, 5), hl(.azul), "ola <mark class=\"azul\">mundo</mark>")
+        check("troca verde por amarelo", "<mark class=\"verde\">a b</mark>", r(20, 1), hl(.amarelo), "==a b==")
+        check("remover destaque de dentro", "x <mark class=\"rosa\">y</mark> z", r(21, 0), hl(nil), "x y z")
+        check("remover destaques da seleção", "==a== e <mark class=\"cinza\">b</mark>", r(0, 36), hl(nil), "a e b")
+        check("destaque em várias linhas mantém a lista", "- um\n- dois", r(0, 11), hl(.amarelo), "- ==um==\n- ==dois==")
+        check("destaque sem palavra deixa as marcas", "", r(0, 0), hl(.roxo), "<mark class=\"roxo\"></mark>")
 
         // Contagem de palavras
         let words = StatusBarView.countWords("Olá, mundo! Isto é um teste de contagem.")

@@ -7,6 +7,7 @@ private extension NSToolbarItem.Identifier {
     static let bold = NSToolbarItem.Identifier("negrito")
     static let italic = NSToolbarItem.Identifier("italico")
     static let strike = NSToolbarItem.Identifier("riscado")
+    static let highlight = NSToolbarItem.Identifier("destaque")
     static let heading = NSToolbarItem.Identifier("titulo")
     static let link = NSToolbarItem.Identifier("link")
     static let image = NSToolbarItem.Identifier("imagem")
@@ -488,7 +489,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
     // MARK: - Barra de ferramentas
 
     private func buildToolbar(in window: NSWindow) {
-        let tb = NSToolbar(identifier: "MarcadoToolbar2")
+        let tb = NSToolbar(identifier: "MarcadoToolbar3")
         tb.delegate = self
         tb.displayMode = .iconOnly
         tb.allowsUserCustomization = true
@@ -498,7 +499,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
     }
 
     func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [.sidebar, .mode, .space, .heading, .bold, .italic, .strike, .code, .link, .quote, .bullet, .numbered, .task, .table,
+        [.sidebar, .mode, .space, .heading, .bold, .italic, .strike, .highlight, .code, .link, .quote, .bullet, .numbered, .task, .table,
          .flexibleSpace, .appearance, .focus, .export]
     }
 
@@ -558,6 +559,18 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSTe
             item.toolTip = "Títulos (⌥⌘1 a ⌥⌘6)"
             item.image = NSImage(systemSymbolName: "textformat.size", accessibilityDescription: "Título")
             item.menu = AppDelegate.headingMenu()
+            item.showsIndicator = true
+            return item
+        case .highlight:
+            // Clique repete a última cor; a setinha abre as cores.
+            let item = NSMenuToolbarItem(itemIdentifier: id)
+            item.label = "Destacar"
+            item.paletteLabel = "Destacar"
+            item.toolTip = "Destacar texto (⇧⌘H repete a última cor)"
+            item.image = NSImage(systemSymbolName: "highlighter", accessibilityDescription: "Destacar")
+            item.action = #selector(MarkdownTextView.highlightWithLastColor(_:))
+            item.target = nil
+            item.menu = AppDelegate.highlightMenu()
             item.showsIndicator = true
             return item
         case .appearance:

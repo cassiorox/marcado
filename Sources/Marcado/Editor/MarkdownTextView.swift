@@ -88,6 +88,20 @@ final class MarkdownTextView: NSTextView {
         }
     }
 
+    // MARK: - Menu do botão direito
+
+    /// Coloca "Destacar" no topo do menu de contexto, como no Notion.
+    override func menu(for event: NSEvent) -> NSMenu? {
+        let menu = super.menu(for: event) ?? NSMenu()
+        guard isEditable else { return menu }
+        let item = NSMenuItem(title: "Destacar", action: nil, keyEquivalent: "")
+        item.image = NSImage(systemSymbolName: "highlighter", accessibilityDescription: nil)
+        item.submenu = AppDelegate.highlightMenu()
+        menu.insertItem(item, at: 0)
+        menu.insertItem(.separator(), at: 1)
+        return menu
+    }
+
     // MARK: - Máquina de escrever
 
     func centerCaret() {

@@ -35,6 +35,34 @@
     }
   });
 
+  // Destaque "==texto==" (Obsidian, Typora). As outras cores vêm como <mark class="verde">,
+  // que o markdown-it já deixa passar por ter html: true.
+  md.inline.ruler.before("emphasis", "mark", function (state, silent) {
+    const src = state.src, start = state.pos, max = state.posMax;
+    const EQ = 0x3D;
+    if (src.charCodeAt(start) !== EQ || src.charCodeAt(start + 1) !== EQ) return false;
+    if (start > 0 && src.charCodeAt(start - 1) === EQ) return false;
+    const first = src.charCodeAt(start + 2);
+    if (start + 2 >= max || first === EQ || /\s/.test(src[start + 2])) return false;
+    let end = -1;
+    for (let i = start + 3; i + 1 < max; i++) {
+      if (src.charCodeAt(i) === EQ && src.charCodeAt(i + 1) === EQ && src.charCodeAt(i + 2) !== EQ &&
+          src.charCodeAt(i - 1) !== EQ && !/\s/.test(src[i - 1])) { end = i; break; }
+    }
+    if (end < 0) return false;
+    if (!silent) {
+      state.push("mark_open", "mark", 1).markup = "==";
+      const oldMax = state.posMax;
+      state.pos = start + 2;
+      state.posMax = end;
+      state.md.inline.tokenize(state);
+      state.posMax = oldMax;
+      state.push("mark_close", "mark", -1).markup = "==";
+    }
+    state.pos = end + 2;
+    return true;
+  });
+
   // Link do YouTube sozinho num parágrafo vira cartão com a thumbnail (clicar abre o vídeo).
   function youtubeID(href) {
     const m = /^(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})(?:[?&#][^\s]*)?$/.exec(href);

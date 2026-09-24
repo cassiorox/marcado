@@ -12,21 +12,29 @@
   --bg: #ffffff; --text: #1d232b; --muted: #6b7480; --heading: #0f1720;
   --link: #003ec7; --code-text: #b4235a; --code-bg: #f3f5f8; --quote: #4a5563;
   --accent: #003ec7; --border: #e3e7ec; --mark: #ffe170;
+  --mark-verde: #bfe8c4; --mark-azul: #c4dcff; --mark-rosa: #fbc9df; --mark-roxo: #ded2fb;
+  --mark-laranja: #ffd4a8; --mark-vermelho: #ffc9c4; --mark-cinza: #e2e5e9;
 }
 :root[data-theme="sepia"] {
   --bg: #f6efdc; --text: #3b3024; --muted: #8a7a62; --heading: #2a2118;
   --link: #8a4b12; --code-text: #8f3b1b; --code-bg: #ece2c8; --quote: #6a5a44;
   --accent: #9a5b1c; --border: #ddd0b0; --mark: #f2d27a;
+  --mark-verde: #c5e0b0; --mark-azul: #c8d8ec; --mark-rosa: #f3c6cf; --mark-roxo: #dccfe8;
+  --mark-laranja: #f5c998; --mark-vermelho: #f2bfae; --mark-cinza: #e0d6bf;
 }
 :root[data-theme="escuro"] {
   --bg: #1e2024; --text: #d9dde3; --muted: #8b929c; --heading: #f1f3f6;
   --link: #7aa7ff; --code-text: #f29bb8; --code-bg: #2a2d33; --quote: #a8afb9;
   --accent: #7aa7ff; --border: #363a41; --mark: #6b5a1c;
+  --mark-verde: #1f4d2e; --mark-azul: #1e3f6b; --mark-rosa: #5e2443; --mark-roxo: #3f2d66;
+  --mark-laranja: #653a12; --mark-vermelho: #662322; --mark-cinza: #3a3f47;
 }
 :root[data-theme="meianoite"] {
   --bg: #0d1117; --text: #c9d1d9; --muted: #7d8590; --heading: #e6edf3;
   --link: #58a6ff; --code-text: #ff9bce; --code-bg: #161b22; --quote: #9aa4ae;
   --accent: #58a6ff; --border: #262c36; --mark: #5a4a12;
+  --mark-verde: #173d24; --mark-azul: #16335a; --mark-rosa: #4d1c37; --mark-roxo: #332456;
+  --mark-laranja: #53300e; --mark-vermelho: #541c1c; --mark-cinza: #2b313a;
 }
 
 * { box-sizing: border-box; }
@@ -83,7 +91,15 @@ body {
 .markdown-body a:hover { text-decoration-thickness: 2px; }
 
 .markdown-body strong { font-weight: 700; color: var(--heading); }
-.markdown-body mark { background: var(--mark); color: inherit; padding: 0 0.15em; border-radius: 2px; }
+.markdown-body mark { background: var(--mark); color: inherit; padding: 0 0.15em; border-radius: 2px;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.markdown-body mark.verde { background: var(--mark-verde); }
+.markdown-body mark.azul { background: var(--mark-azul); }
+.markdown-body mark.rosa { background: var(--mark-rosa); }
+.markdown-body mark.roxo { background: var(--mark-roxo); }
+.markdown-body mark.laranja { background: var(--mark-laranja); }
+.markdown-body mark.vermelho { background: var(--mark-vermelho); }
+.markdown-body mark.cinza { background: var(--mark-cinza); }
 
 .markdown-body ul, .markdown-body ol { padding-left: 1.5em; }
 .markdown-body li { margin: 0.25em 0; }

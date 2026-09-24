@@ -77,6 +77,8 @@ final class SyntaxHighlighter: NSObject, NSTextStorageDelegate {
     private static let link = rx("(!?\\[)([^\\]\\n]*)(\\]\\()([^)\\n]*)(\\))")
     private static let url = rx("(?<![(<\\w])https?://[^\\s<>)\\]]+")
     private static let htmlComment = rx("<!--.*?-->")
+    static let markEquals = rx("(?<!=)==(?=[^\\s=])(.+?)(?<=[^\\s=])==(?!=)")
+    static let markTag = rx("<mark(?:[ \\t]+class=\"([a-z]+)\")?[ \\t]*>(.*?)</mark>")
 
     private func fenceRanges(in ns: NSString) -> [NSRange] {
         var result: [NSRange] = []
@@ -160,6 +162,19 @@ final class SyntaxHighlighter: NSObject, NSTextStorageDelegate {
         }
         each(Self.url) { m in color(m.range, palette.link) }
         each(Self.htmlComment) { m in color(m.range, palette.muted) }
+        // Destaques: fundo colorido no texto, marcas em cinza. Antes do código, que vence.
+        each(Self.markEquals) { m in
+            if let bg = palette.marks[.amarelo] { ts.addAttribute(.backgroundColor, value: bg, range: m.range(at: 1)) }
+            muteDelimiters(m, 2)
+        }
+        each(Self.markTag) { m in
+            let cls = m.range(at: 1).location == NSNotFound ? "" : ns.substring(with: m.range(at: 1))
+            let c = HighlightColor(name: cls) ?? .amarelo
+            let inner = m.range(at: 2)
+            if let bg = palette.marks[c], inner.length > 0 { ts.addAttribute(.backgroundColor, value: bg, range: inner) }
+            color(NSRange(location: m.range.location, length: inner.location - m.range.location), palette.muted)
+            color(NSRange(location: NSMaxRange(inner), length: NSMaxRange(m.range) - NSMaxRange(inner)), palette.muted)
+        }
         each(Self.inlineCode) { m in
             ts.addAttributes([.font: monoFont, .foregroundColor: palette.codeText, .backgroundColor: palette.codeBg], range: m.range)
             ts.removeAttribute(.strikethroughStyle, range: m.range)
