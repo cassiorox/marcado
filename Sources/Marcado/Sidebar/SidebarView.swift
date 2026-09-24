@@ -413,6 +413,7 @@ final class SidebarView: NSView, NSOutlineViewDataSource, NSOutlineViewDelegate,
         }
         guard let it = obj as? Item else { return }
         add("Abrir", #selector(menuOpen(_:)), it)
+        if it.url != nil || it.doc != nil { add("Duplicar", #selector(duplicateItem(_:)), it) }
         if it.url != nil {
             add("Mostrar no Finder", #selector(revealInFinder(_:)), it)
             add("Copiar caminho", #selector(copyPath(_:)), it)
@@ -427,6 +428,17 @@ final class SidebarView: NSView, NSOutlineViewDataSource, NSOutlineViewDelegate,
     }
 
     @objc private func menuOpen(_ sender: NSMenuItem) { (sender.representedObject as? Item).map(open) }
+
+    /// Arquivo: cópia salva ao lado ("Nome cópia.md"), aberta e pronta para renomear.
+    /// Rascunho: vira outro rascunho, como Arquivo > Duplicar.
+    @objc private func duplicateItem(_ sender: NSMenuItem) {
+        guard let it = sender.representedObject as? Item else { return }
+        if let d = it.doc, NSDocumentController.shared.documents.contains(where: { $0 === d }) {
+            d.duplicate(nil)
+        } else if let url = it.url {
+            MarkdownDocument.duplicateFile(url)
+        }
+    }
 
     @objc private func revealInFinder(_ sender: NSMenuItem) {
         guard let url = (sender.representedObject as? Item)?.url else { return }

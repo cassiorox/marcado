@@ -207,6 +207,19 @@ enum SelfTest {
                     expect(false, "Duplicar")
                 }
 
+                // Duplicar arquivo salvo: cópia de verdade ao lado, com o texto da tela, e aberta.
+                let base = fileURL.deletingPathExtension().lastPathComponent
+                let c1 = MarkdownDocument.duplicateFile(fileURL, text: "texto da tela", rename: false)
+                let c2 = MarkdownDocument.duplicateFile(fileURL, rename: false)
+                spin(2) { NSDocumentController.shared.documents.contains { $0.fileURL?.lastPathComponent == c2?.lastPathComponent } }
+                expect(c1?.lastPathComponent == base + " cópia.md" && (try? String(contentsOf: c1!, encoding: .utf8)) == "texto da tela",
+                       "Duplicar arquivo grava \"Nome cópia.md\" com o texto da tela")
+                expect(c2?.lastPathComponent == base + " cópia 2.md", "segunda cópia vira \"cópia 2\"")
+                let copies = NSDocumentController.shared.documents.filter { d in [c1, c2].contains { $0?.lastPathComponent == d.fileURL?.lastPathComponent } }
+                expect(copies.count == 2, "cópias abrem em abas (\(copies.count))")
+                copies.forEach { $0.close() }
+                [c1, c2].compactMap { $0 }.forEach { try? FileManager.default.removeItem(at: $0) }
+
                 // Rascunho fechado de propósito vai para Descartados.
                 SessionStore.isTerminating = false
                 if let back {

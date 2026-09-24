@@ -44,7 +44,12 @@ documentos do Mac, sem pasta de notas obrigatória, sem banco e sem servidor.
 **Abrir e organizar**
 - Documentos em abas, como no Safari. Duplo clique no Finder abre no Marcado.
 - Barra lateral no estilo do Explorador do VS Code: documentos abertos e recentes, com filtro,
-  menu de contexto (Mostrar no Finder, Copiar caminho, Remover dos recentes) e arrastar e soltar.
+  menu de contexto (Duplicar, Mostrar no Finder, Copiar caminho, Remover dos recentes) e arrastar
+  e soltar.
+- Duplicar (botão direito na barra lateral ou Arquivo > Duplicar, ⌥⇧⌘S) cria uma cópia salva ao
+  lado do original, "Nome cópia.md", com o texto que está na tela, abre numa aba nova e já abre o
+  campo para dar o nome novo. Dali em diante as mudanças gravam sozinhas nessa cópia. Rascunho sem
+  arquivo vira outro rascunho.
 - Tela de início focada em abrir, quando não há nada aberto.
 
 **Nunca perder texto**
@@ -143,7 +148,7 @@ sozinho, e Arquivo > Reverter volta à última versão salva.
 - Arquivos em `~/Library/Application Support/Marcado/`: `sessao.json` (abas), `Rascunhos/`
   (um `.md` por rascunho aberto) e `Descartados/`. São texto puro, sem criptografia.
 - A barra lateral (⌃⌘S) lista os documentos abertos e os recentes, com filtro. Clique abre;
-  o botão direito tem Mostrar no Finder, Copiar caminho e Remover dos recentes. Dá para
+  o botão direito tem Duplicar, Mostrar no Finder, Copiar caminho e Remover dos recentes. Dá para
   arrastar arquivos para ela. A largura é ajustável e fica lembrada.
 
 ## Linha de comando

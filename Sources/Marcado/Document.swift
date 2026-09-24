@@ -106,6 +106,52 @@ final class MarkdownDocument: NSDocument {
         SessionStore.documentClosed()
     }
 
+    // MARK: - Duplicar como arquivo
+
+    /// Arquivo salvo: Duplicar cria "Nome cópia.md" na mesma pasta, abre e já pede o nome novo.
+    /// Rascunho segue o Duplicar padrão (outro rascunho).
+    override func duplicate(_ sender: Any?) {
+        guard let url = fileURL else { super.duplicate(sender); return }
+        Self.duplicateFile(url, text: currentText)
+    }
+
+    /// Nome livre ao lado do original, no padrão do Finder: "Nome cópia.md", "Nome cópia 2.md"...
+    static func copyURL(for url: URL) -> URL {
+        let dir = url.deletingLastPathComponent()
+        let base = url.deletingPathExtension().lastPathComponent
+        let ext = url.pathExtension
+        var n = 1
+        while true {
+            let name = base + (n == 1 ? " cópia" : " cópia \(n)")
+            let candidate = dir.appendingPathComponent(ext.isEmpty ? name : name + "." + ext)
+            if !FileManager.default.fileExists(atPath: candidate.path) { return candidate }
+            n += 1
+        }
+    }
+
+    /// Grava a cópia (com o texto que está na tela, se o original estiver aberto), abre numa aba
+    /// nova e abre o campo de renomear do título. Se o nome não for trocado, fica "cópia".
+    @discardableResult
+    static func duplicateFile(_ url: URL, text: String? = nil, rename: Bool = true) -> URL? {
+        let dest = copyURL(for: url)
+        do {
+            if let text {
+                try Data(text.utf8).write(to: dest, options: .withoutOverwriting)
+            } else {
+                try FileManager.default.copyItem(at: url, to: dest)
+            }
+        } catch {
+            NSApp.presentError(error)
+            return nil
+        }
+        NSDocumentController.shared.openDocument(withContentsOf: dest, display: true) { doc, _, error in
+            if let error { NSApp.presentError(error); return }
+            guard rename, let doc else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { doc.rename(nil) }
+        }
+        return dest
+    }
+
     override func printDocument(_ sender: Any?) {
         controller?.printDocument()
     }
